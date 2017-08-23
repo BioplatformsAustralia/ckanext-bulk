@@ -27,7 +27,6 @@ class WgetController(GroupController):
     def file_list(self, id):
         limit = 100
 
-        from sys import stderr
         group_type = self._ensure_controller_matches_group_type(
             id.split('@')[0])
 
@@ -51,7 +50,12 @@ class WgetController(GroupController):
             abort(404, _('Group not found'))
 
         self._read(id, limit, group_type)
-        print >>stderr, "c", c
 
+        urls = []
+        for package in c.page.items:
+            for resource in package['resources']:
+                # cast away unicode
+                urls.append(str(resource['url']))
         response.headers['Content-Type'] = 'text/plain'
-        return "hello world"
+        resp = '\n'.join(urls) + '\n'
+        return resp

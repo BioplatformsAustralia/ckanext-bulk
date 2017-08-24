@@ -1,17 +1,64 @@
 import re
+import datetime
 import logging
 import ckan.plugins as p
+import ckan.lib.helpers as h
 from pylons import config
 from ckan import model
 from ckan.lib.base import abort, BaseController
 from ckan.controllers.organization import OrganizationController
 from ckan.common import request, response, c
 from ckan.logic import NotFound, NotAuthorized, get_action
+from zipfile import ZipFile, ZIP_DEFLATED
+from io import BytesIO
 
 _ = p.toolkit._
 
 
 log = logging.getLogger(__name__)
+
+
+WGET_EXPLANATORY_NOTE = '''\
+CKAN Bulk Download
+------------------
+
+Bulk download generated: %(timestamp)s
+Bulk download context: %(title)s
+
+This archive contains the following files:
+
+urls.txt:
+A list of all URLs matching the CKAN search you performed.
+
+md5sum.txt:
+MD5 checksums for all files.
+
+download.sh:
+UNIX shell script, which when executed will download the files,
+and then checksum then. This should operate correctly on any
+Linux distribution, so long as 'wget' and 'md5sum' are installed.
+'''
+
+
+def get_timestamp():
+    return datetime.datetime.now(
+        h.get_display_timezone()).strftime('%Y-%m-%dT%H:%M:%S.%f%z')
+
+
+def bulk_download_zip(title, pfx, urls):
+    def ip(s):
+        return pfx + '/' + s
+
+    response.headers['Content-Type'] = 'application/zip'
+    fd = BytesIO()
+    zf = ZipFile(fd, mode='w', compression=ZIP_DEFLATED)
+    zf.writestr(ip('README.txt'), WGET_EXPLANATORY_NOTE % {
+
+    });
+    zf.writestr(ip('urls.txt'), u'\n'.join(urls) + u'\n')
+    zf.writestr(ip('download.sh'), '#!/bin/bash\n\nwget -i urls.txt')
+    zf.close()
+    return fd.getvalue()
 
 
 class WgetOrganizationController(OrganizationController):
@@ -54,10 +101,8 @@ class WgetOrganizationController(OrganizationController):
         for package in c.page.items:
             for resource in package['resources']:
                 urls.append(resource['url'])
-        response.headers['Content-Type'] = 'text/plain'
-        response.charset = 'UTF-8'
-        resp = u'\n'.join(urls) + u'\n'
-        return resp
+
+        return bulk_download_zip(urls)
 
 
 class WgetPackageController(BaseController):
@@ -89,7 +134,5 @@ class WgetPackageController(BaseController):
         urls = []
         for resource in pkg_dict['resources']:
             urls.append(resource['url'])
-        response.headers['Content-Type'] = 'text/plain'
-        response.charset = 'UTF-8'
-        resp = u'\n'.join(urls) + u'\n'
-        return resp
+
+        return bulk_download_zip(urls)

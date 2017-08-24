@@ -6,7 +6,7 @@ from ckan import model
 from ckan.lib.base import abort, BaseController
 from ckan.controllers.organization import OrganizationController
 from ckan.common import request, response, c
-from ckan.logic import NotFound, NotAuthorized
+from ckan.logic import NotFound, NotAuthorized, get_action
 
 _ = p.toolkit._
 
@@ -68,9 +68,26 @@ class WgetPackageController(BaseController):
         self.limit = p.toolkit.asint(config.get('ckanext.wget.limit', 100))
 
     def file_list(self, id):
-        package = {'resources': []}
+        context = {
+            'model': model,
+            'session': model.Session,
+            'user': c.user,
+            'for_view': True,
+            'auth_user_obj': c.userobj
+        }
+        data_dict = {
+            'id': id,
+            'include_tracking': True
+        }
+
+        # check if package exists
+        try:
+            pkg_dict = get_action('package_show')(context, data_dict)
+        except (NotFound, NotAuthorized):
+            abort(404, _('Dataset not found'))
+
         urls = []
-        for resource in package['resources']:
+        for resource in pkg_dict['resources']:
             urls.append(resource['url'])
         response.headers['Content-Type'] = 'text/plain'
         response.charset = 'UTF-8'

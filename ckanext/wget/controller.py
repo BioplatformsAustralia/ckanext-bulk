@@ -55,7 +55,8 @@ class WgetController(GroupController):
         for package in c.page.items:
             for resource in package['resources']:
                 # cast away unicode
-                urls.append(str(resource['url']))
+                urls.append(resource['url'])
         response.headers['Content-Type'] = 'text/plain'
-        resp = '\n'.join(urls) + '\n'
+        response.charset = 'UTF-8'
+        resp = u'\n'.join(urls) + u'\n'
         return resp

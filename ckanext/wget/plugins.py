@@ -11,13 +11,12 @@ class WgetPlugin(SingletonPlugin):
     implements(IRoutes, inherit=True)
 
     def after_map(self, map):
-        log.critical("wget URL mapped")
-        controller = 'ckanext.wget.controller:WgetController'
+        org_controller = 'ckanext.wget.controller:WgetOrganizationController'
         map.connect(
             'file_list',
             '/wget/organization/{id}/file_list',
             action='file_list',
-            controller=controller)
+            controller=org_controller)
         return map
 
     def update_config(self, config):

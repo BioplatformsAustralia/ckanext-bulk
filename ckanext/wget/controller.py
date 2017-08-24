@@ -4,7 +4,7 @@ import ckan.plugins as p
 from pylons import config
 from ckan import model
 from ckan.lib.base import abort
-from ckan.controllers.group import GroupController
+from ckan.controllers.organization import OrganizationController
 from ckan.common import request, response, c
 from ckan.logic import NotFound, NotAuthorized
 
@@ -14,20 +14,13 @@ _ = p.toolkit._
 log = logging.getLogger(__name__)
 
 
-class WgetController(GroupController):
-    controller = 'ckanext.wget.controller:WgetController'
+class WgetOrganizationController(OrganizationController):
+    controller = 'ckanext.wget.controller:WgetOrganizationController'
     group_types = ['organization']
 
     def __init__(self, *args, **kwargs):
-        super(WgetController, self).__init__(*args, **kwargs)
+        super(WgetOrganizationController, self).__init__(*args, **kwargs)
         self.limit = p.toolkit.asint(config.get('ckanext.wget.limit', 100))
-
-    def _guess_group_type(self, expecting_name=False):
-        return 'organization'
-
-    def _replace_group_org(self, string):
-        ''' substitute organization for group if this is an org'''
-        return re.sub('^group', 'organization', string)
 
     def file_list(self, id):
         group_type = self._ensure_controller_matches_group_type(

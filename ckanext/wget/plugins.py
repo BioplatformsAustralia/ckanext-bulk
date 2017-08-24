@@ -14,7 +14,7 @@ class WgetPlugin(SingletonPlugin):
         log.critical("wget URL mapped")
         controller = 'ckanext.wget.controller:WgetController'
         map.connect(
-            'wget_filelist',
+            'file_list',
             '/wget/organization/{id}/file_list',
             action='file_list',
             controller=controller)

@@ -33,10 +33,13 @@ class WgetController(GroupController):
         group_type = self._ensure_controller_matches_group_type(
             id.split('@')[0])
 
-        context = {'model': model, 'session': model.Session,
-                   'user': c.user,
-                   'schema': self._db_to_form_schema(group_type=group_type),
-                   'for_view': True}
+        context = {
+            'model': model,
+            'session': model.Session,
+            'user': c.user,
+            'schema': self._db_to_form_schema(group_type=group_type),
+            'for_view': True
+        }
         data_dict = {'id': id, 'type': group_type}
 
         # unicode format (decoded from utf8)
@@ -57,7 +60,6 @@ class WgetController(GroupController):
         urls = []
         for package in c.page.items:
             for resource in package['resources']:
-                # cast away unicode
                 urls.append(resource['url'])
         response.headers['Content-Type'] = 'text/plain'
         response.charset = 'UTF-8'

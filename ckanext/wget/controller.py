@@ -1,6 +1,7 @@
 import re
 import logging
 import ckan.plugins as p
+from pylons import config
 from ckan import model
 from ckan.lib.base import abort
 from ckan.controllers.group import GroupController
@@ -17,6 +18,10 @@ class WgetController(GroupController):
     controller = 'ckanext.wget.controller:WgetController'
     group_types = ['organization']
 
+    def __init__(self, *args, **kwargs):
+        super(WgetController, self).__init__(*args, **kwargs)
+        self.limit = p.toolkit.asint(config.get('ckanext.wget.limit', 100))
+
     def _guess_group_type(self, expecting_name=False):
         return 'organization'
 
@@ -25,8 +30,6 @@ class WgetController(GroupController):
         return re.sub('^group', 'organization', string)
 
     def file_list(self, id):
-        limit = 100
-
         group_type = self._ensure_controller_matches_group_type(
             id.split('@')[0])
 
@@ -49,7 +52,7 @@ class WgetController(GroupController):
             raise
             abort(404, _('Group not found'))
 
-        self._read(id, limit, group_type)
+        self._read(id, self.limit, group_type)
 
         urls = []
         for package in c.page.items:

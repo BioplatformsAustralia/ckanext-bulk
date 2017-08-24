@@ -3,7 +3,7 @@ import logging
 import ckan.plugins as p
 from pylons import config
 from ckan import model
-from ckan.lib.base import abort
+from ckan.lib.base import abort, BaseController
 from ckan.controllers.organization import OrganizationController
 from ckan.common import request, response, c
 from ckan.logic import NotFound, NotAuthorized
@@ -54,6 +54,24 @@ class WgetOrganizationController(OrganizationController):
         for package in c.page.items:
             for resource in package['resources']:
                 urls.append(resource['url'])
+        response.headers['Content-Type'] = 'text/plain'
+        response.charset = 'UTF-8'
+        resp = u'\n'.join(urls) + u'\n'
+        return resp
+
+
+class WgetPackageController(BaseController):
+    controller = 'ckanext.wget.controller:WgetPackageController'
+
+    def __init__(self, *args, **kwargs):
+        super(WgetPackageController, self).__init__(*args, **kwargs)
+        self.limit = p.toolkit.asint(config.get('ckanext.wget.limit', 100))
+
+    def file_list(self, id):
+        package = {'resources': []}
+        urls = []
+        for resource in package['resources']:
+            urls.append(resource['url'])
         response.headers['Content-Type'] = 'text/plain'
         response.charset = 'UTF-8'
         resp = u'\n'.join(urls) + u'\n'

@@ -13,10 +13,16 @@ class WgetPlugin(SingletonPlugin):
     def after_map(self, map):
         org_controller = 'ckanext.wget.controller:WgetOrganizationController'
         map.connect(
-            'file_list',
+            'wget_organization_file_list',
             '/wget/organization/{id}/file_list',
             action='file_list',
             controller=org_controller)
+        pkg_controller = 'ckanext.wget.controller:WgetPackageController'
+        map.connect(
+            'wget_package_file_list',
+            '/wget/dataset/{id}/file_list',
+            action='file_list',
+            controller=pkg_controller)
         return map
 
     def update_config(self, config):

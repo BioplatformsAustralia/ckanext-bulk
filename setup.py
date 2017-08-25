@@ -3,7 +3,7 @@ from setuptools import setup
 
 setup(
     name='ckanext-wget',
-    version='0.1.0',
+    version='0.2.0',
     description='',
     license='AGPL3',
     author='CCG, Murdoch University',

@@ -60,7 +60,7 @@ def bulk_download_zip(pfx, title, resource_iter):
     def ip(s):
         return pfx + '/' + s
 
-    wget_args = []
+    wget_args = ['--no-http-keep-alive']
     auth_tkt = request.cookies.get('auth_tkt')
     if auth_tkt is not None:
         wget_args.append('--header=Cookie: auth_tkt="%s"' % auth_tkt)

@@ -3,7 +3,7 @@ from setuptools import setup
 
 setup(
     name='ckanext-bulk',
-    version='0.2.1',
+    version='0.9.0',
     description='',
     license='GPL3',
     author='CCG, Murdoch University',

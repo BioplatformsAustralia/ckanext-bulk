@@ -25,11 +25,16 @@ SH_TEMPLATE = '''\
 # This UNIX shell script was automatically generated.
 #
 
-# This API key authorises access to CKAN for the user
-# __USERNAME__.
-#
-# Keep this script secure and confidential.
-apikey='__APIKEY__'
+if [ x"$CKAN_API_KEY" = "x" ]; then
+  echo "Please set the CKAN_API_KEY environment variable."
+  echo
+  echo "You can find your API Key by browsing to:"
+  echo "__USER_PAGE__"
+  echo
+  echo "The API key has the format:"
+  echo "xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx"
+  exit 1
+fi
 
 if ! which wget >/dev/null 2>&1; then
   echo "`wget` is not installed. Please install it."
@@ -50,15 +55,21 @@ md5sum -c md5sum.txt 2>&1 | tee md5sums.log
 POWERSHELL_TEMPLATE = '''\
 #!/usr/bin/powershell
 
+$apikey = $Env:CKAN_API_KEY
+if (!$apikey) {
+  "Please set the CKAN_API_KEY environment variable."
+  ""
+  "You can find your API Key by browsing to:"
+  "__USER_PAGE__"
+  ""
+  "The API key has the format:"
+  "xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx"
+  exit 1
+}
+
 #
 # This PowerShell script was automatically generated.
 #
-
-# This API key authorises access to CKAN for the user
-# __USERNAME__.
-#
-# Keep this script secure and confidential.
-$apikey = "__APIKEY__"
 
 function DownloadURL($url)
 {
@@ -130,15 +141,14 @@ A list of all URLs matching the CKAN search you performed.
 md5sum.txt:
 MD5 checksums for all files.
 
+download.ps1:
+Windows PowerShell script, which when executed will download the files,
+and then checksum them. There are no dependencies other than PowerShell.
+
 download.sh:
 UNIX shell script, which when executed will download the files,
-and then checksum then. This is supported on any
-Linux system, so long as 'wget' and 'md5sum' are installed.
-
-Please note that this script contains your API Key, which is a
-private token authorising you to access to the data archive.
-
-Keep the contents of this script secure and confidential.
+and then checksum then. This is supported on any Linux or MacOS/BSD
+system, so long as `wget` is installed.
 '''
 
 
@@ -155,7 +165,9 @@ def bulk_download_zip(pfx, title, user, resource_iter):
         info = ZipInfo(ip(filename))
         info.external_attr = 0755 << 16L
         # we don't use python format-strings as the powershell syntax collides
-        contents = contents.replace('__USERNAME__', user.name).replace('__APIKEY__', user.apikey)
+        site_url = config.get('ckan.site_url').rstrip('/')
+        user_url = h.url_for(controller='user', action='read', id=user.name)
+        contents = contents.replace("__USER_PAGE__", '%s/%s' % (site_url, user_url))
         zf.writestr(info, contents.encode('utf-8'))
 
     urls = []

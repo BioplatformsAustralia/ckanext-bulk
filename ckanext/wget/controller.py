@@ -2,7 +2,6 @@ import datetime
 import logging
 import ckan.plugins as p
 import ckan.lib.helpers as h
-import pipes
 from pylons import config
 from ckan import model
 from ckan.lib.base import abort, BaseController
@@ -19,12 +18,109 @@ _ = p.toolkit._
 log = logging.getLogger(__name__)
 
 
+SH_TEMPLATE = '''\
+#!/bin/sh
+
+#
+# This UNIX shell script was automatically generated.
+#
+
+# This API key authorises access to CKAN for the user
+# __USERNAME__.
+#
+# Keep this script secure and confidential.
+apikey='__APIKEY__'
+
+if ! which wget >/dev/null 2>&1; then
+  echo "`wget` is not installed. Please install it."
+  echo
+  echo "On MacOS, it can be installed via HomeBrew (https://brew.sh/)"
+  echo "using the command `brew install wget`"
+  exit 1
+fi
+
+echo "Downloading data"
+wget --no-http-keep-alive --header="Authorization: $apikey" -c -t 0 -i urls.txt
+
+echo "Data download complete. Verifying checksums:"
+md5sum -c md5sum.txt 2>&1 | tee md5sums.log
+'''
+
+
+POWERSHELL_TEMPLATE = '''\
+#!/usr/bin/powershell
+
+#
+# This PowerShell script was automatically generated.
+#
+
+# This API key authorises access to CKAN for the user
+# __USERNAME__.
+#
+# Keep this script secure and confidential.
+$apikey = "__APIKEY__"
+
+function DownloadURL($url)
+{
+    $filename = $url.Substring($url.lastIndexOf('/') + 1)
+    if (Test-Path $filename) {
+        "File already exists, skipping download: " + $filename
+        return
+    }
+    $client = new-object System.Net.WebClient
+    $client.Headers.Add('Authorization: ' + $apikey)
+    "Downloading: " + $filename
+    $client.DownloadFile($url, $filename)
+}
+
+function VerifyMD5([String]$filename, [String]$expected_md5)
+{
+    $md5hash = new-object -TypeName System.Security.Cryptography.MD5CryptoServiceProvider
+    try {
+        $actual_md5 = [System.BitConverter]::ToString($md5hash.ComputeHash([System.IO.File]::ReadAllBytes($filename))).Replace('-', '').toLower();
+    } catch [System.IO.FileNotFoundException] {
+        $filename + ": FAILED open or read"
+        return
+    }
+    if ($actual_md5 -eq $expected_md5) {
+        $filename + ": OK"
+    } else {
+        $filename + ": FAILED"
+    }
+}
+
+
+"Commencing bulk download of data from CKAN"
+""
+
+$urls = Get-Content 'urls.txt'
+ForEach ($line in $urls) {
+    DownloadURL $line
+}
+
+"File downloads complete."
+""
+"Verifying file checksums"
+""
+$md5s = Get-Content 'md5sum.txt'
+ForEach ($line in $md5s) {
+    $md5, $filename = $line.Split(" ",[StringSplitOptions]'RemoveEmptyEntries')
+    VerifyMD5 $filename $md5
+}
+'''
+
+
 WGET_EXPLANATORY_NOTE = '''\
 CKAN Bulk Download
 ------------------
 
-Bulk download generated: %(timestamp)s
-Bulk download context: %(title)s
+{title}
+
+Bulk download package generated:
+{timestamp}
+
+Bulk download authorised for user:
+{user}
 
 This archive contains the following files:
 
@@ -36,18 +132,13 @@ MD5 checksums for all files.
 
 download.sh:
 UNIX shell script, which when executed will download the files,
-and then checksum then. This should operate correctly on any
-Linux distribution, so long as 'wget' and 'md5sum' are installed.
-'''
+and then checksum then. This is supported on any
+Linux system, so long as 'wget' and 'md5sum' are installed.
 
-DOWNLOAD_SCRIPT = '''\
-#!/bin/sh
+Please note that this script contains your API Key, which is a
+private token authorising you to access to the data archive.
 
-echo "Downloading data"
-wget %(wget_args)s -c -t 0 -i urls.txt
-
-echo "Data download complete. Verifying checksums:"
-md5sum -c md5sum.txt 2>&1 | tee md5sums.log
+Keep the contents of this script secure and confidential.
 '''
 
 
@@ -56,19 +147,21 @@ def get_timestamp():
         h.get_display_timezone()).strftime('%Y-%m-%dT%H:%M:%S.%f%z')
 
 
-def bulk_download_zip(pfx, title, resource_iter):
+def bulk_download_zip(pfx, title, user, resource_iter):
     def ip(s):
         return pfx + '/' + s
 
-    wget_args = ['--no-http-keep-alive']
-    auth_tkt = request.cookies.get('auth_tkt')
-    if auth_tkt is not None:
-        wget_args.append('--header=Cookie: auth_tkt="%s"' % auth_tkt)
+    def write_script(filename, contents):
+        info = ZipInfo(ip(filename))
+        info.external_attr = 0755 << 16L
+        # we don't use python format-strings as the powershell syntax collides
+        contents = contents.replace('__USERNAME__', user.name).replace('__APIKEY__', user.apikey)
+        zf.writestr(info, contents.encode('utf-8'))
 
     urls = []
     md5sums = []
 
-    for resource in resource_iter:
+    for resource in sorted(resource_iter, key=lambda r: r['url']):
         url = resource['url']
         urls.append(resource['url'])
         if 'md5' in resource:
@@ -79,17 +172,16 @@ def bulk_download_zip(pfx, title, resource_iter):
     response.headers['Content-Disposition'] = str('attachment; filename="%s.zip"' % pfx)
     fd = BytesIO()
     zf = ZipFile(fd, mode='w', compression=ZIP_DEFLATED)
-    zf.writestr(ip('README.txt'), WGET_EXPLANATORY_NOTE % {
-        'timestamp': get_timestamp(),
-        'title': title,
-    })
+    zf.writestr(ip('README.txt'), WGET_EXPLANATORY_NOTE.format(
+        timestamp=get_timestamp(),
+        title=title,
+        user='%s (%s, %s)' % (user.fullname, user.name, user.email)))
     zf.writestr(ip('urls.txt'), u'\n'.join(urls) + u'\n')
     zf.writestr(ip('md5sum.txt'), u'\n'.join('%s  %s' % t for t in md5sums))
-    info = ZipInfo(ip('download.sh'))
-    info.external_attr = 0755 << 16L
-    zf.writestr(info, DOWNLOAD_SCRIPT % {
-        'wget_args': str(' '.join(pipes.quote(t) for t in wget_args))
-    })
+
+    write_script('download.sh', SH_TEMPLATE)
+    write_script('download.ps1', POWERSHELL_TEMPLATE)
+
     zf.close()
     return fd.getvalue()
 
@@ -135,7 +227,7 @@ class WgetOrganizationController(OrganizationController):
                     yield resource
 
         name = c.group_dict['name']
-        return bulk_download_zip(name, 'Organization: %s' % (name,), _resource_iter())
+        return bulk_download_zip(name, 'Search of organization: %s' % (name,), c.userobj, _resource_iter())
 
 
 class WgetPackageController(BaseController):
@@ -164,9 +256,5 @@ class WgetPackageController(BaseController):
         except (NotFound, NotAuthorized):
             abort(404, _('Dataset not found'))
 
-        def _resource_iter():
-            for resource in pkg_dict['resources']:
-                yield resource
-
         name = pkg_dict['name']
-        return bulk_download_zip(name, 'Dataset: %s' % (name,), pkg_dict['resources'])
+        return bulk_download_zip(name, 'Dataset: %s' % (name,), c.userobj, pkg_dict['resources'])

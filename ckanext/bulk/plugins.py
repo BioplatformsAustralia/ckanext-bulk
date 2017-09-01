@@ -6,21 +6,21 @@ from ckan.plugins import toolkit, IConfigurer, IRoutes, SingletonPlugin, impleme
 log = logging.getLogger(__name__)
 
 
-class WgetPlugin(SingletonPlugin):
+class BulkPlugin(SingletonPlugin):
     implements(IConfigurer)
     implements(IRoutes, inherit=True)
 
     def after_map(self, map):
-        org_controller = 'ckanext.wget.controller:WgetOrganizationController'
+        org_controller = 'ckanext.bulk.controller:BulkOrganizationController'
         map.connect(
-            'wget_organization_file_list',
-            '/wget/organization/{id}/file_list',
+            'bulk_organization_file_list',
+            '/bulk/organization/{id}/file_list',
             action='file_list',
             controller=org_controller)
-        pkg_controller = 'ckanext.wget.controller:WgetPackageController'
+        pkg_controller = 'ckanext.bulk.controller:BulkPackageController'
         map.connect(
-            'wget_package_file_list',
-            '/wget/dataset/{id}/file_list',
+            'bulk_package_file_list',
+            '/bulk/dataset/{id}/file_list',
             action='file_list',
             controller=pkg_controller)
         return map

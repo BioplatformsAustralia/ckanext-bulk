@@ -2,21 +2,21 @@
 from setuptools import setup
 
 setup(
-    name='ckanext-wget',
+    name='ckanext-bulk',
     version='0.2.1',
     description='',
-    license='AGPL3',
+    license='GPL3',
     author='CCG, Murdoch University',
     author_email='tech@ccg.murdoch.edu.au',
-    url='https://github.com/muccg/ckanext-wget/',
+    url='https://github.com/muccg/ckanext-bulk/',
     namespace_packages=['ckanext'],
-    packages=['ckanext.wget'],
+    packages=['ckanext.bulk'],
     zip_safe=False,
     include_package_data=True,
-    package_dir={'ckanext.wget': 'ckanext/wget'},
-    package_data={'ckanext.wget': ['*.json', 'templates/*.html', 'templates/*/*.html', 'templates/*/*/*.html', 'static/*.css', 'static/*.png', 'static/*.jpg', 'static/*.css', 'static/*.ico']},
+    package_dir={'ckanext.bulk': 'ckanext/bulk'},
+    package_data={'ckanext.bulk': ['*.json', 'templates/*.html', 'templates/*/*.html', 'templates/*/*/*.html', 'static/*.css', 'static/*.png', 'static/*.jpg', 'static/*.css', 'static/*.ico']},
     entry_points = """
         [ckan.plugins]
-        wget = ckanext.wget.plugins:WgetPlugin
+        bulk = ckanext.bulk.plugins:BulkPlugin
     """
 )

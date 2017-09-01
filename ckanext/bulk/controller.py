@@ -121,7 +121,7 @@ ForEach ($line in $md5s) {
 '''
 
 
-WGET_EXPLANATORY_NOTE = '''\
+BULK_EXPLANATORY_NOTE = '''\
 CKAN Bulk Download
 ------------------
 
@@ -173,18 +173,19 @@ def bulk_download_zip(pfx, title, user, resource_iter):
     urls = []
     md5sums = []
 
+    md5_attribute = config.get('ckanext.bulk.md5_attribute', 'md5')
     for resource in sorted(resource_iter, key=lambda r: r['url']):
         url = resource['url']
         urls.append(resource['url'])
-        if 'md5' in resource:
+        if md5_attribute in resource:
             filename = urlparse(url).path.split('/')[-1]
-            md5sums.append((resource['md5'], filename))
+            md5sums.append((resource[md5_attribute], filename))
 
     response.headers['Content-Type'] = 'application/zip'
     response.headers['Content-Disposition'] = str('attachment; filename="%s.zip"' % pfx)
     fd = BytesIO()
     zf = ZipFile(fd, mode='w', compression=ZIP_DEFLATED)
-    zf.writestr(ip('README.txt'), WGET_EXPLANATORY_NOTE.format(
+    zf.writestr(ip('README.txt'), BULK_EXPLANATORY_NOTE.format(
         timestamp=get_timestamp(),
         title=title,
         user='%s (%s, %s)' % (user.fullname, user.name, user.email)))
@@ -198,13 +199,13 @@ def bulk_download_zip(pfx, title, user, resource_iter):
     return fd.getvalue()
 
 
-class WgetOrganizationController(OrganizationController):
-    controller = 'ckanext.wget.controller:WgetOrganizationController'
+class BulkOrganizationController(OrganizationController):
+    controller = 'ckanext.bulk.controller:BulkOrganizationController'
     group_types = ['organization']
 
     def __init__(self, *args, **kwargs):
-        super(WgetOrganizationController, self).__init__(*args, **kwargs)
-        self.limit = p.toolkit.asint(config.get('ckanext.wget.limit', 100))
+        super(BulkOrganizationController, self).__init__(*args, **kwargs)
+        self.limit = p.toolkit.asint(config.get('ckanext.bulk.limit', 100))
 
     def file_list(self, id):
         group_type = self._ensure_controller_matches_group_type(
@@ -242,12 +243,12 @@ class WgetOrganizationController(OrganizationController):
         return bulk_download_zip(name, 'Search of organization: %s' % (name,), c.userobj, _resource_iter())
 
 
-class WgetPackageController(BaseController):
-    controller = 'ckanext.wget.controller:WgetPackageController'
+class BulkPackageController(BaseController):
+    controller = 'ckanext.bulk.controller:BulkPackageController'
 
     def __init__(self, *args, **kwargs):
-        super(WgetPackageController, self).__init__(*args, **kwargs)
-        self.limit = p.toolkit.asint(config.get('ckanext.wget.limit', 100))
+        super(BulkPackageController, self).__init__(*args, **kwargs)
+        self.limit = p.toolkit.asint(config.get('ckanext.bulk.limit', 100))
 
     def file_list(self, id):
         context = {

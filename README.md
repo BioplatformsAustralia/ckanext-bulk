@@ -1,10 +1,14 @@
-# ckanext-wget
+# ckanext-bulk
 
 This CKAN extension adds a bulk-download facility to CKAN.
 
-Links can be added to organization search packages, as well
-as to the dataset page, which produce a Zip file containing:
+Snippets are provided, which when included on the relevant pages will
+add a button that, when clicked, downloads a Zip file containing:
 
   - a list of all relevant resource URLs
   - a MD5 checksum file
-  - a shell script which downloads those resources with `wget`, then confirms the checksums match
+  - a Windows PowerShell script which downloads those resources, then confirms the checksums match
+  - a UNIX shell script which downloads those resources with `wget`, then confirms the checksums match
+
+Snippets are provided for the organization and package search CKAN views.
+

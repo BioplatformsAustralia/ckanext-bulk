@@ -1,2 +1,2 @@
-{% set url = h.url_for(controller='ckanext.wget.controller:WgetPackageController', action='file_list', id=id) %}
+{% set url = h.url_for(controller='ckanext.bulk.controller:BulkPackageController', action='file_list', id=id) %}
 <a class="btn btn-default" href="{{ url }}" target="_blank"><i class="icon-download-alt"></i> {{ _('Bulk download') }}</a>

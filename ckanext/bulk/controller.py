@@ -45,7 +45,7 @@ if ! which wget >/dev/null 2>&1; then
 fi
 
 echo "Downloading data"
-wget --no-http-keep-alive --header="Authorization: $apikey" -c -t 0 -i urls.txt
+wget --no-http-keep-alive --header="Authorization: $CKAN_API_KEY" -c -t 0 -i urls.txt
 
 echo "Data download complete. Verifying checksums:"
 md5sum -c md5sum.txt 2>&1 | tee md5sums.log

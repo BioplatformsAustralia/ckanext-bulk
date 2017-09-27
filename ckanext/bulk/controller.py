@@ -138,10 +138,10 @@ BULK_EXPLANATORY_NOTE = '''\
 CKAN Bulk Download
 ------------------
 
-{{title}}
+{title}
 
 Bulk download package generated:
-{{timestamp}}
+{timestamp}
 
 This archive contains the following files:
 

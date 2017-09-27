@@ -48,9 +48,9 @@ fi
 
 echo "Downloading data"
 if [ x"$CKAN_API_KEY" = "x" ]; then
-    wget --no-http-keep-alive -c -t 0 -i urls.txt
+    wget -c -t 0 -i urls.txt
 else
-    wget --no-http-keep-alive --header="Authorization: $CKAN_API_KEY" -c -t 0 -i urls.txt
+    wget --header="Authorization: $CKAN_API_KEY" -c -t 0 -i urls.txt
 fi
 
 echo "Data download complete. Verifying checksums:"

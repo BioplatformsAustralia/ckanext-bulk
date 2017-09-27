@@ -1,5 +1,6 @@
 import datetime
 import logging
+import jinja2
 import ckan.plugins as p
 import ckan.lib.helpers as h
 from pylons import config
@@ -24,17 +25,18 @@ SH_TEMPLATE = '''\
 #
 # This UNIX shell script was automatically generated.
 #
-
+{% if user_page %}
 if [ x"$CKAN_API_KEY" = "x" ]; then
   echo "Please set the CKAN_API_KEY environment variable."
   echo
   echo "You can find your API Key by browsing to:"
-  echo "__USER_PAGE__"
+  echo "{{ user_page }}"
   echo
   echo "The API key has the format:"
   echo "xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx"
   exit 1
 fi
+{% endif %}
 
 if ! which wget >/dev/null 2>&1; then
   echo "`wget` is not installed. Please install it."
@@ -45,27 +47,35 @@ if ! which wget >/dev/null 2>&1; then
 fi
 
 echo "Downloading data"
-wget --no-http-keep-alive --header="Authorization: $CKAN_API_KEY" -c -t 0 -i urls.txt
+if [ x"$CKAN_API_KEY" = "x" ]; then
+    wget --no-http-keep-alive -c -t 0 -i urls.txt
+else
+    wget --no-http-keep-alive --header="Authorization: $CKAN_API_KEY" -c -t 0 -i urls.txt
+fi
 
 echo "Data download complete. Verifying checksums:"
-md5sum -c md5sum.txt 2>&1 | tee md5sums.log
+md5sum -c md5sum.txt 2>&1 | tee md5sum.log
 '''
 
 
 POWERSHELL_TEMPLATE = '''\
 #!/usr/bin/powershell
 
+{% if user_page %}
 $apikey = $Env:CKAN_API_KEY
 if (!$apikey) {
   "Please set the CKAN_API_KEY environment variable."
   ""
   "You can find your API Key by browsing to:"
-  "__USER_PAGE__"
+  "{{ user_page }}"
   ""
   "The API key has the format:"
   "xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx"
   exit 1
 }
+{% else %}
+$apikey = $null;
+{% endif %}
 
 #
 # This PowerShell script was automatically generated.
@@ -79,7 +89,9 @@ function DownloadURL($url)
         return
     }
     $client = new-object System.Net.WebClient
-    $client.Headers.Add('Authorization: ' + $apikey)
+    if ($apikey) {
+        $client.Headers.Add('Authorization: ' + $apikey)
+    }
     "Downloading: " + $filename
     $client.DownloadFile($url, $filename)
 }
@@ -101,7 +113,7 @@ function VerifyMD5([String]$filename, [String]$expected_md5)
 }
 
 
-"Commencing bulk download of data from CKAN"
+"Commencing bulk download of data from CKAN:"
 ""
 
 $urls = Get-Content 'urls.txt'
@@ -111,13 +123,14 @@ ForEach ($line in $urls) {
 
 "File downloads complete."
 ""
-"Verifying file checksums"
+"Verifying file checksums:"
 ""
 $md5s = Get-Content 'md5sum.txt'
 ForEach ($line in $md5s) {
     $md5, $filename = $line.Split(" ",[StringSplitOptions]'RemoveEmptyEntries')
     VerifyMD5 $filename $md5
 }
+
 '''
 
 
@@ -125,13 +138,10 @@ BULK_EXPLANATORY_NOTE = '''\
 CKAN Bulk Download
 ------------------
 
-{title}
+{{title}}
 
 Bulk download package generated:
-{timestamp}
-
-Bulk download authorised for user:
-{user}
+{{timestamp}}
 
 This archive contains the following files:
 
@@ -149,6 +159,7 @@ download.sh:
 UNIX shell script, which when executed will download the files,
 and then checksum then. This is supported on any Linux or MacOS/BSD
 system, so long as `wget` is installed.
+
 '''
 
 
@@ -164,10 +175,11 @@ def bulk_download_zip(pfx, title, user, resource_iter):
     def write_script(filename, contents):
         info = ZipInfo(ip(filename))
         info.external_attr = 0755 << 16L
-        # we don't use python format-strings as the powershell syntax collides
-        site_url = config.get('ckan.site_url').rstrip('/')
-        user_url = h.url_for(controller='user', action='read', id=user.name)
-        contents = contents.replace("__USER_PAGE__", '%s/%s' % (site_url, user_url))
+        user_page = None
+        if user:
+            site_url = config.get('ckan.site_url').rstrip('/')
+            user_page = '%s/%s' % (site_url, h.url_for(controller='user', action='read', id=user.name))
+        contents = jinja2.Environment().from_string(contents).render(user_page=user_page)
         zf.writestr(info, contents.encode('utf-8'))
 
     urls = []
@@ -187,8 +199,7 @@ def bulk_download_zip(pfx, title, user, resource_iter):
     zf = ZipFile(fd, mode='w', compression=ZIP_DEFLATED)
     zf.writestr(ip('README.txt'), BULK_EXPLANATORY_NOTE.format(
         timestamp=get_timestamp(),
-        title=title,
-        user='%s (%s, %s)' % (user.fullname, user.name, user.email)))
+        title=title))
     zf.writestr(ip('urls.txt'), u'\n'.join(urls) + u'\n')
     zf.writestr(ip('md5sum.txt'), u'\n'.join('%s  %s' % t for t in md5sums))
 

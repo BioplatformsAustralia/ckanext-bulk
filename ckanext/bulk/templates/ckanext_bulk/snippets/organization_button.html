@@ -1,2 +1,2 @@
 {% set url = h.add_url_param(controller='ckanext.bulk.controller:BulkOrganizationController', action='file_list', extras={'id': id}, new_params=request.params) %}
-<a class="btn btn-default" href="{{ url }}" target="_blank"><i class="icon-download-alt"></i> {{ _('Bulk download') }}</a>
+<a class="btn btn-default" href="{{ url }}" target="_blank"><i class="icon-download-alt"></i> {{ _('Bulk download (metadata and data)') }}</a>

@@ -1,213 +1,17 @@
-import datetime
 import logging
-import jinja2
 import ckan.plugins as p
-import ckan.lib.helpers as h
+from ckan.common import request, c
 from pylons import config
 from ckan import model
 from ckan.lib.base import abort, BaseController
 from ckan.controllers.organization import OrganizationController
-from ckan.common import request, response, c
 from ckan.logic import NotFound, NotAuthorized, get_action
-from urlparse import urlparse
-from zipfile import ZipFile, ZipInfo, ZIP_DEFLATED
-from io import BytesIO
+from .zipoutput import bulk_download_zip
 
 _ = p.toolkit._
 
 
 log = logging.getLogger(__name__)
-
-
-SH_TEMPLATE = '''\
-#!/bin/sh
-
-#
-# This UNIX shell script was automatically generated.
-#
-{% if user_page %}
-if [ x"$CKAN_API_KEY" = "x" ]; then
-  echo "Please set the CKAN_API_KEY environment variable."
-  echo
-  echo "You can find your API Key by browsing to:"
-  echo "{{ user_page }}"
-  echo
-  echo "The API key has the format:"
-  echo "xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx"
-  exit 1
-fi
-{% endif %}
-
-if ! which wget >/dev/null 2>&1; then
-  echo "`wget` is not installed. Please install it."
-  echo
-  echo "On MacOS, it can be installed via HomeBrew (https://brew.sh/)"
-  echo "using the command `brew install wget`"
-  exit 1
-fi
-
-echo "Downloading data"
-if [ x"$CKAN_API_KEY" = "x" ]; then
-    wget -c -t 0 -i urls.txt
-else
-    wget --header="Authorization: $CKAN_API_KEY" -c -t 0 -i urls.txt
-fi
-
-echo "Data download complete. Verifying checksums:"
-md5sum -c md5sum.txt 2>&1 | tee md5sum.log
-'''
-
-
-POWERSHELL_TEMPLATE = '''\
-#!/usr/bin/powershell
-
-{% if user_page %}
-$apikey = $Env:CKAN_API_KEY
-if (!$apikey) {
-  "Please set the CKAN_API_KEY environment variable."
-  ""
-  "You can find your API Key by browsing to:"
-  "{{ user_page }}"
-  ""
-  "The API key has the format:"
-  "xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx"
-  exit 1
-}
-{% else %}
-$apikey = $null;
-{% endif %}
-
-#
-# This PowerShell script was automatically generated.
-#
-
-function DownloadURL($url)
-{
-    $filename = $url.Substring($url.lastIndexOf('/') + 1)
-    if (Test-Path $filename) {
-        "File already exists, skipping download: " + $filename
-        return
-    }
-    $client = new-object System.Net.WebClient
-    if ($apikey) {
-        $client.Headers.Add('Authorization: ' + $apikey)
-    }
-    "Downloading: " + $filename
-    $client.DownloadFile($url, $filename)
-}
-
-function VerifyMD5([String]$filename, [String]$expected_md5)
-{
-    $md5hash = new-object -TypeName System.Security.Cryptography.MD5CryptoServiceProvider
-    try {
-        $actual_md5 = [System.BitConverter]::ToString($md5hash.ComputeHash([System.IO.File]::ReadAllBytes($filename))).Replace('-', '').toLower();
-    } catch [System.IO.FileNotFoundException] {
-        $filename + ": FAILED open or read"
-        return
-    }
-    if ($actual_md5 -eq $expected_md5) {
-        $filename + ": OK"
-    } else {
-        $filename + ": FAILED"
-    }
-}
-
-
-"Commencing bulk download of data from CKAN:"
-""
-
-$urls = Get-Content 'urls.txt'
-ForEach ($line in $urls) {
-    DownloadURL $line
-}
-
-"File downloads complete."
-""
-"Verifying file checksums:"
-""
-$md5s = Get-Content 'md5sum.txt'
-ForEach ($line in $md5s) {
-    $md5, $filename = $line.Split(" ",[StringSplitOptions]'RemoveEmptyEntries')
-    VerifyMD5 $filename $md5
-}
-
-'''
-
-
-BULK_EXPLANATORY_NOTE = '''\
-CKAN Bulk Download
-------------------
-
-{title}
-
-Bulk download package generated:
-{timestamp}
-
-This archive contains the following files:
-
-urls.txt:
-A list of all URLs matching the CKAN search you performed.
-
-md5sum.txt:
-MD5 checksums for all files.
-
-download.ps1:
-Windows PowerShell script, which when executed will download the files,
-and then checksum them. There are no dependencies other than PowerShell.
-
-download.sh:
-UNIX shell script, which when executed will download the files,
-and then checksum then. This is supported on any Linux or MacOS/BSD
-system, so long as `wget` is installed.
-
-'''
-
-
-def get_timestamp():
-    return datetime.datetime.now(
-        h.get_display_timezone()).strftime('%Y-%m-%dT%H:%M:%S.%f%z')
-
-
-def bulk_download_zip(pfx, title, user, resource_iter):
-    def ip(s):
-        return pfx + '/' + s
-
-    def write_script(filename, contents):
-        info = ZipInfo(ip(filename))
-        info.external_attr = 0755 << 16L
-        user_page = None
-        if user:
-            site_url = config.get('ckan.site_url').rstrip('/')
-            user_page = '%s/%s' % (site_url, h.url_for(controller='user', action='read', id=user.name))
-        contents = jinja2.Environment().from_string(contents).render(user_page=user_page)
-        zf.writestr(info, contents.encode('utf-8'))
-
-    urls = []
-    md5sums = []
-
-    md5_attribute = config.get('ckanext.bulk.md5_attribute', 'md5')
-    for resource in sorted(resource_iter, key=lambda r: r['url']):
-        url = resource['url']
-        urls.append(resource['url'])
-        if md5_attribute in resource:
-            filename = urlparse(url).path.split('/')[-1]
-            md5sums.append((resource[md5_attribute], filename))
-
-    response.headers['Content-Type'] = 'application/zip'
-    response.headers['Content-Disposition'] = str('attachment; filename="%s.zip"' % pfx)
-    fd = BytesIO()
-    zf = ZipFile(fd, mode='w', compression=ZIP_DEFLATED)
-    zf.writestr(ip('README.txt'), BULK_EXPLANATORY_NOTE.format(
-        timestamp=get_timestamp(),
-        title=title))
-    zf.writestr(ip('urls.txt'), u'\n'.join(urls) + u'\n')
-    zf.writestr(ip('md5sum.txt'), u'\n'.join('%s  %s' % t for t in md5sums))
-
-    write_script('download.sh', SH_TEMPLATE)
-    write_script('download.ps1', POWERSHELL_TEMPLATE)
-
-    zf.close()
-    return fd.getvalue()
 
 
 class BulkOrganizationController(OrganizationController):
@@ -245,13 +49,17 @@ class BulkOrganizationController(OrganizationController):
 
         self._read(id, self.limit, group_type)
 
+        def _package_iter():
+            for package in c.page.items:
+                yield package
+
         def _resource_iter():
             for package in c.page.items:
                 for resource in package['resources']:
                     yield resource
 
         name = c.group_dict['name']
-        return bulk_download_zip(name, 'Search of organization: %s' % (name,), c.userobj, _resource_iter())
+        return bulk_download_zip(name, 'Search of organization: %s' % (name,), c.userobj, list(_package_iter()), list(_resource_iter()))
 
 
 class BulkPackageController(BaseController):
@@ -281,4 +89,4 @@ class BulkPackageController(BaseController):
             abort(404, _('Dataset not found'))
 
         name = pkg_dict['name']
-        return bulk_download_zip(name, 'Dataset: %s' % (name,), c.userobj, pkg_dict['resources'])
+        return bulk_download_zip(name, 'Dataset: %s' % (name,), c.userobj, [pkg_dict], pkg_dict['resources'])

@@ -49,18 +49,11 @@ def get_timestamp():
         h.get_display_timezone()).strftime('%Y-%m-%dT%H:%M:%S.%f%z')
 
 
-def packages_by_type(packages):
-    by_type = defaultdict(list)
-    for package in packages:
-        by_type[package['type']].append(package)
-    return by_type
-
-
-def resources_by_type(resources):
-    by_type = defaultdict(list)
-    for resource in resources:
-        by_type[resource['resource_type']].append(resource)
-    return by_type
+def objects_by_attr(objects, attr):
+    by_attr = defaultdict(list)
+    for obj in objects:
+        by_attr[obj[attr]].append(obj)
+    return by_attr
 
 
 def debug(s):
@@ -86,13 +79,13 @@ def schema_to_csv(typ, schema_key, objects):
     return fd.getvalue()
 
 
-def bulk_download_zip(pfx, title, user, packages, resources):
+def generate_bulk_zip(pfx, title, user, packages, resources):
     def ip(s):
         return pfx + '/' + s
 
     def write_script(filename, contents):
         info = ZipInfo(ip(filename))
-        info.external_attr = 0755 << 16L
+        info.external_attr = 0755 << 16L  # mark script as executable
         user_page = None
         if user:
             site_url = config.get('ckan.site_url').rstrip('/')
@@ -121,10 +114,10 @@ def bulk_download_zip(pfx, title, user, packages, resources):
     zf.writestr(ip('urls.txt'), u'\n'.join(urls) + u'\n')
     zf.writestr(ip('md5sum.txt'), u'\n'.join('%s  %s' % t for t in md5sums) + u'\n')
 
-    for typ, typ_packages in packages_by_type(packages).items():
+    for typ, typ_packages in objects_by_attr(packages, 'type').items():
         zf.writestr(ip('datasets/{}.csv'.format(typ)), schema_to_csv(typ, 'dataset_fields', typ_packages))
 
-    for typ, typ_resources in resources_by_type(resources).items():
+    for typ, typ_resources in objects_by_attr(resources, 'resource_type').items():
         zf.writestr(ip('files/{}.csv'.format(typ)), schema_to_csv(typ, 'resource_fields', typ_resources))
 
     write_script('download.sh', SH_TEMPLATE)

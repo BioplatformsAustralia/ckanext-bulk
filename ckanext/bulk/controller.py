@@ -6,7 +6,7 @@ from ckan import model
 from ckan.lib.base import abort, BaseController
 from ckan.controllers.organization import OrganizationController
 from ckan.logic import NotFound, NotAuthorized, get_action
-from .zipoutput import bulk_download_zip
+from .zipoutput import generate_bulk_zip
 
 _ = p.toolkit._
 
@@ -49,17 +49,21 @@ class BulkOrganizationController(OrganizationController):
 
         self._read(id, self.limit, group_type)
 
-        def _package_iter():
-            for package in c.page.items:
-                yield package
-
-        def _resource_iter():
+        def _resources():
             for package in c.page.items:
                 for resource in package['resources']:
                     yield resource
 
         name = c.group_dict['name']
-        return bulk_download_zip(name, 'Search of organization: %s' % (name,), c.userobj, list(_package_iter()), list(_resource_iter()))
+        packages = [t for t in c.page.items]
+        resources = list(_resources())
+
+        return generate_bulk_zip(
+            name,
+            'Search of organization: {}'.format(name),
+            c.userobj,
+            packages,
+            resources)
 
 
 class BulkPackageController(BaseController):
@@ -89,4 +93,4 @@ class BulkPackageController(BaseController):
             abort(404, _('Dataset not found'))
 
         name = pkg_dict['name']
-        return bulk_download_zip(name, 'Dataset: %s' % (name,), c.userobj, [pkg_dict], pkg_dict['resources'])
+        return generate_bulk_zip(name, 'Dataset: %s' % (name,), c.userobj, [pkg_dict], pkg_dict['resources'])

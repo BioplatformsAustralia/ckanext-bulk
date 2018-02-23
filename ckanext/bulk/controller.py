@@ -5,7 +5,8 @@ from pylons import config
 from ckan import model
 from ckan.lib.base import abort, BaseController
 from ckan.controllers.organization import OrganizationController
-from ckan.logic import NotFound, NotAuthorized, get_action
+from ckan.logic import NotFound, NotAuthorized, get_action, check_access
+from collections import OrderedDict
 from .zipoutput import generate_bulk_zip
 
 _ = p.toolkit._
@@ -61,6 +62,83 @@ class BulkOrganizationController(OrganizationController):
         return generate_bulk_zip(
             name,
             'Search of organization: {}'.format(name),
+            c.userobj,
+            packages,
+            resources)
+
+
+class BulkSearchController(BaseController):
+    controller = 'ckanext.bulk.controller:BulkSearchController'
+
+    def __init__(self, *args, **kwargs):
+        super(BaseController, self).__init__(*args, **kwargs)
+        self.limit = p.toolkit.asint(config.get('ckanext.bulk.limit', 100))
+
+    def file_list(self):
+        try:
+            context = {'model': model, 'user': c.user,
+                       'auth_user_obj': c.userobj}
+            check_access('site_read', context)
+        except NotAuthorized:
+            abort(403, _('Not authorized to see this page'))
+
+        # unicode format (decoded from utf8)
+        q = request.params.get('q', u'')
+        c.query_error = False
+
+        c.fields = []
+        # c.fields_grouped will contain a dict of params containing
+        # a list of values eg {'tags':['tag1', 'tag2']}
+        c.fields_grouped = {}
+        search_extras = {}
+        fq = ''
+        for (param, value) in request.params.items():
+            if param not in ['q', 'page', 'sort'] \
+                    and len(value) and not param.startswith('_'):
+                if not param.startswith('ext_'):
+                    c.fields.append((param, value))
+                    fq += ' %s:"%s"' % (param, value)
+                    if param not in c.fields_grouped:
+                        c.fields_grouped[param] = [value]
+                    else:
+                        c.fields_grouped[param].append(value)
+                else:
+                    search_extras[param] = value
+
+        context = {
+            'model': model,
+            'session': model.Session,
+            'user': c.user,
+            'for_view': True,
+            'auth_user_obj': c.userobj
+        }
+
+        facets = OrderedDict()
+
+        data_dict = {
+            'q': q,
+            'fq': fq.strip(),
+            'facet.field': facets.keys(),
+            'rows': self.limit,
+            'extras': search_extras,
+            'include_private': p.toolkit.asbool(config.get(
+                'ckan.search.default_include_private', True)),
+        }
+
+        query = get_action('package_search')(context, data_dict)
+        results = query['results']
+
+        def _resources():
+            for package in results:
+                for resource in package['resources']:
+                    yield resource
+
+        packages = [t for t in results]
+        resources = list(_resources())
+
+        return generate_bulk_zip(
+            'search',
+            'Search of all datasets',
             c.userobj,
             packages,
             resources)

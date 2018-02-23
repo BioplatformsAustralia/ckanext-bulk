@@ -17,6 +17,12 @@ class BulkPlugin(SingletonPlugin):
             '/bulk/organization/{id}/file_list',
             action='file_list',
             controller=org_controller)
+        pkg_controller = 'ckanext.bulk.controller:BulkSearchController'
+        map.connect(
+            'bulk_package_search_list',
+            '/bulk/dataset/search_list',
+            action='file_list',
+            controller=pkg_controller)
         pkg_controller = 'ckanext.bulk.controller:BulkPackageController'
         map.connect(
             'bulk_package_file_list',

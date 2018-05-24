@@ -66,6 +66,9 @@ def schema_to_csv(typ, schema_key, objects):
     # Note: as we're in Python 2, we have to do a bit of a dance here with unicode --
     # we must make sure everything we put into the writer has been encoded
     schema = scheming_get_dataset_schema(typ)
+    if schema is None:
+        # some objects may not have a ckanext-scheming schema
+        return ''
     fd = StringIO()
     w = csv.writer(fd)
     header = []
@@ -115,9 +118,15 @@ def generate_bulk_zip(pfx, title, user, packages, resources):
     zf.writestr(ip('md5sum.txt'), u'\n'.join('%s  %s' % t for t in md5sums) + u'\n')
 
     for typ, typ_packages in objects_by_attr(packages, 'type').items():
+        # some objects may not have a ckanext-scheming schema
+        if typ is None:
+            continue
         zf.writestr(ip('datasets/{}.csv'.format(typ)), schema_to_csv(typ, 'dataset_fields', typ_packages))
 
     for typ, typ_resources in objects_by_attr(resources, 'resource_type').items():
+        # some objects may not have a ckanext-scheming schema
+        if typ is None:
+            continue
         zf.writestr(ip('files/{}.csv'.format(typ)), schema_to_csv(typ, 'resource_fields', typ_resources))
 
     write_script('download.sh', SH_TEMPLATE)

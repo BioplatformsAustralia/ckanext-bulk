@@ -1,5 +1,5 @@
 POWERSHELL_TEMPLATE = '''\
-#!/usr/bin/powershell
+#!/usr/bin/env pwsh
 
 {% if user_page %}
 $apikey = $Env:CKAN_API_KEY

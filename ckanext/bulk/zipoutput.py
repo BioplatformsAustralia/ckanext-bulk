@@ -41,6 +41,15 @@ UNIX shell script, which when executed will download the files,
 and then checksum then. This is supported on any Linux or MacOS/BSD
 system, so long as `wget` is installed.
 
+package_metadata folder:
+Contains metadata for selected packages.
+
+resource_metadata folder:
+Contains metadata for resources for selected packages.
+
+To set an environment variable in Linux:
+export <VARIABLE NAME>=<VARIABLE_VALUE>
+For a more detailed guide, see: https://wiki.archlinux.org/index.php/environment_variables
 '''
 
 
@@ -121,13 +130,13 @@ def generate_bulk_zip(pfx, title, user, packages, resources):
         # some objects may not have a ckanext-scheming schema
         if typ is None:
             continue
-        zf.writestr(ip('datasets/{}.csv'.format(typ)), schema_to_csv(typ, 'dataset_fields', typ_packages))
+        zf.writestr(ip('package_metadata/{}.csv'.format(typ)), schema_to_csv(typ, 'dataset_fields', typ_packages))
 
     for typ, typ_resources in objects_by_attr(resources, 'resource_type').items():
         # some objects may not have a ckanext-scheming schema
         if typ is None:
             continue
-        zf.writestr(ip('files/{}.csv'.format(typ)), schema_to_csv(typ, 'resource_fields', typ_resources))
+        zf.writestr(ip('resource_metadata/{}.csv'.format(typ)), schema_to_csv(typ, 'resource_fields', typ_resources))
 
     write_script('download.sh', SH_TEMPLATE)
     write_script('download.ps1', POWERSHELL_TEMPLATE)

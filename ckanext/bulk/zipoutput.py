@@ -42,10 +42,11 @@ and then checksum then. This is supported on any Linux or MacOS/BSD
 system, so long as `wget` is installed.
 
 package_metadata folder:
-Contains metadata for selected packages.
+Contains metadata spreadsheets for all selected packages, grouped by
+package schema. Each package will contain one or more resources.
 
 resource_metadata folder:
-Contains metadata for resources for selected packages.
+Contains metadata spreadsheets for all selected resources (files).
 
 To set an environment variable in Linux:
 export <VARIABLE NAME>=<VARIABLE_VALUE>

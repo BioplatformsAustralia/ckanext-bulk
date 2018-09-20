@@ -47,10 +47,6 @@ package schema. Each package will contain one or more resources.
 
 resource_metadata folder:
 Contains metadata spreadsheets for all selected resources (files).
-
-To set an environment variable in Linux:
-export <VARIABLE NAME>=<VARIABLE_VALUE>
-For a more detailed guide, see: https://wiki.archlinux.org/index.php/environment_variables
 '''
 
 

@@ -13,6 +13,10 @@ if [ x"$CKAN_API_KEY" = "x" ]; then
   echo
   echo "The API key has the format:"
   echo "xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx"
+  echo
+  echo "To set the environment variable in Linux/MacOS/Unix, use:"
+  echo "export CKAN_API_KEY=xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx"
+  echo ""
   exit 1
 fi
 {% endif %}

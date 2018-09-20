@@ -4,13 +4,19 @@ POWERSHELL_TEMPLATE = '''\
 {% if user_page %}
 $apikey = $Env:CKAN_API_KEY
 if (!$apikey) {
-  "Please set the CKAN_API_KEY environment variable."
-  ""
-  "You can find your API Key by browsing to:"
-  "{{ user_page }}"
-  ""
-  "The API key has the format:"
-  "xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx"
+  'Please set the CKAN_API_KEY environment variable.'
+  ''
+  'You can find your API Key by browsing to:'
+  '{{ user_page }}'
+  ''
+  'The API key has the format:'
+  'xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx'
+  ''
+  'To set the environment variable in Linux/MacOS/Unix, use:'
+  'export CKAN_API_KEY=xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx'
+  ''
+  'On Microsoft Windows, within Powershell, use:'
+  '$env:CKAN_API_KEY=xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx'
   exit 1
 }
 {% else %}
@@ -53,18 +59,18 @@ function VerifyMD5([String]$filename, [String]$expected_md5)
 }
 
 
-"Commencing bulk download of data from CKAN:"
-""
+'Commencing bulk download of data from CKAN:'
+''
 
 $urls = Get-Content 'urls.txt'
 ForEach ($line in $urls) {
     DownloadURL $line
 }
 
-"File downloads complete."
-""
-"Verifying file checksums:"
-""
+'File downloads complete.'
+''
+'Verifying file checksums:'
+''
 $md5s = Get-Content 'md5sum.txt'
 ForEach ($line in $md5s) {
     $md5, $filename = $line.Split(" ",[StringSplitOptions]'RemoveEmptyEntries')

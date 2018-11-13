@@ -50,6 +50,13 @@ Contains metadata spreadsheets for all selected resources (files).
 '''
 
 
+def str_crlf(s):
+    """
+    convert string to DOS multi-line encoding (CRLF)
+    """
+    return s.replace('\n', '\r\n')
+
+
 def get_timestamp():
     return datetime.datetime.now(
         h.get_display_timezone()).strftime('%Y-%m-%dT%H:%M:%S.%f%z')
@@ -117,9 +124,9 @@ def generate_bulk_zip(pfx, title, user, packages, resources):
     response.headers['Content-Disposition'] = str('attachment; filename="%s.zip"' % pfx)
     fd = BytesIO()
     zf = ZipFile(fd, mode='w', compression=ZIP_DEFLATED)
-    zf.writestr(ip('README.txt'), BULK_EXPLANATORY_NOTE.format(
+    zf.writestr(ip('README.txt'), str_crlf(BULK_EXPLANATORY_NOTE.format(
         timestamp=get_timestamp(),
-        title=title))
+        title=title)))
     zf.writestr(ip('urls.txt'), u'\n'.join(urls) + u'\n')
     zf.writestr(ip('md5sum.txt'), u'\n'.join('%s  %s' % t for t in md5sums) + u'\n')
 

@@ -88,10 +88,10 @@ def schema_to_csv(typ, schema_key, objects):
     field_names = []
     for field in schema[schema_key]:
         field_names.append(field['field_name'])
-        header.append(unicode(field['label'].encode('utf8')))
+        header.append(field['label'].encode('utf8'))
     w.writerow(header)
     for obj in sorted(objects, key=lambda p: p['name']):
-        w.writerow([unicode(obj.get(field_name, '')).encode('utf8') for field_name in field_names])
+        w.writerow([obj.get(field_name, '').encode('utf8') for field_name in field_names])
     return fd.getvalue()
 
 

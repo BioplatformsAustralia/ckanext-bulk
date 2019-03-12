@@ -91,13 +91,16 @@ def schema_to_csv(typ, schema_key, objects):
         header.append(field['label'].encode('utf8'))
     w.writerow(header)
     for obj in sorted(objects, key=lambda p: p['name']):
-        # fix for bpa-archive-ops#792 AttributeError: 'int' object has no attribute 'encode'
-        for field_name in field_names:
-            val = obj.get(field_name, '')
-            if isinstance(val, (int, long, float)):
-                val = str(val)
-            w.writerow(val.encode('utf8'))
+        w.writerow([encode_field(obj.get(field_name, ''))
+                    for field_name in field_names])
     return fd.getvalue()
+
+
+def encode_field(field_name):
+    # fix for AttributeError: 'int' object has no attribute 'encode'
+    if isinstance(field_name, (int, long, float)):
+        field_name = str(field_name)
+    return field_name.encode('utf8')
 
 
 def generate_bulk_zip(pfx, title, user, packages, resources):

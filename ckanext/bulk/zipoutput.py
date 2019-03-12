@@ -91,8 +91,16 @@ def schema_to_csv(typ, schema_key, objects):
         header.append(field['label'].encode('utf8'))
     w.writerow(header)
     for obj in sorted(objects, key=lambda p: p['name']):
-        w.writerow([obj.get(field_name, '').encode('utf8') for field_name in field_names])
+        w.writerow([encode_field(obj.get(field_name, ''))
+                    for field_name in field_names])
     return fd.getvalue()
+
+
+def encode_field(field_name):
+    # fix for AttributeError: 'int' object has no attribute 'encode'
+    if isinstance(field_name, (int, long, float)):
+        field_name = str(field_name)
+    return field_name.encode('utf8')
 
 
 def generate_bulk_zip(pfx, title, user, packages, resources):
@@ -105,8 +113,10 @@ def generate_bulk_zip(pfx, title, user, packages, resources):
         user_page = None
         if user:
             site_url = config.get('ckan.site_url').rstrip('/')
-            user_page = '%s/%s' % (site_url, h.url_for(controller='user', action='read', id=user.name))
-        contents = jinja2.Environment().from_string(contents).render(user_page=user_page)
+            user_page = '%s/%s' % (site_url, h.url_for(controller='user',
+                                                       action='read', id=user.name))
+        contents = jinja2.Environment().from_string(
+            contents).render(user_page=user_page)
         zf.writestr(info, contents.encode('utf-8'))
 
     urls = []
@@ -121,26 +131,30 @@ def generate_bulk_zip(pfx, title, user, packages, resources):
             md5sums.append((resource[md5_attribute], filename))
 
     response.headers['Content-Type'] = 'application/zip'
-    response.headers['Content-Disposition'] = str('attachment; filename="%s.zip"' % pfx)
+    response.headers['Content-Disposition'] = str(
+        'attachment; filename="%s.zip"' % pfx)
     fd = BytesIO()
     zf = ZipFile(fd, mode='w', compression=ZIP_DEFLATED)
     zf.writestr(ip('README.txt'), str_crlf(BULK_EXPLANATORY_NOTE.format(
         timestamp=get_timestamp(),
         title=title)))
     zf.writestr(ip('urls.txt'), u'\n'.join(urls) + u'\n')
-    zf.writestr(ip('md5sum.txt'), u'\n'.join('%s  %s' % t for t in md5sums) + u'\n')
+    zf.writestr(ip('md5sum.txt'), u'\n'.join(
+        '%s  %s' % t for t in md5sums) + u'\n')
 
     for typ, typ_packages in objects_by_attr(packages, 'type').items():
         # some objects may not have a ckanext-scheming schema
         if typ is None:
             continue
-        zf.writestr(ip('package_metadata/{}.csv'.format(typ)), schema_to_csv(typ, 'dataset_fields', typ_packages))
+        zf.writestr(ip('package_metadata/{}.csv'.format(typ)),
+                    schema_to_csv(typ, 'dataset_fields', typ_packages))
 
     for typ, typ_resources in objects_by_attr(resources, 'resource_type').items():
         # some objects may not have a ckanext-scheming schema
         if typ is None:
             continue
-        zf.writestr(ip('resource_metadata/{}.csv'.format(typ)), schema_to_csv(typ, 'resource_fields', typ_resources))
+        zf.writestr(ip('resource_metadata/{}.csv'.format(typ)),
+                    schema_to_csv(typ, 'resource_fields', typ_resources))
 
     write_script('download.sh', SH_TEMPLATE)
     write_script('download.ps1', POWERSHELL_TEMPLATE)

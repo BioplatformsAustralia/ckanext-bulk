@@ -1,2 +1,2 @@
 {% set url = h.add_url_param(controller='ckanext.bulk.controller:BulkSearchController', action='file_list', new_params=request.params) %}
-<a title="A zip archive will download. Extract it, and then follow the instructions in the README file to download this data in bulk." class="btn btn-default" href="{{ url }}" target="_blank"><i class="icon-download-alt"></i> {{ _('Bulk download (metadata and data)') }}</a>
+<a title="A zip archive will download. Extract it, and then follow the instructions in the README file to download this data in bulk." class="btn btn-default" href="{{ url }}" target="_blank"><i class="icon-download-alt"></i> {{ _('Bulk download (metadata and data URL)') }}</a>

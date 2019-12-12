@@ -39,7 +39,7 @@ and then checksum them. There are no dependencies other than PowerShell.
 download.sh:
 UNIX shell script, which when executed will download the files,
 and then checksum then. This is supported on any Linux or MacOS/BSD
-system, so long as `wget` is installed.
+system, so long as `curl` is installed.
 
 package_metadata folder:
 Contains metadata spreadsheets for all selected packages, grouped by

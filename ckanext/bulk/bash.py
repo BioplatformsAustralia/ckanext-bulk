@@ -21,19 +21,25 @@ if [ x"$CKAN_API_KEY" = "x" ]; then
 fi
 {% endif %}
 
-if ! which wget >/dev/null 2>&1; then
-  echo "`wget` is not installed. Please install it."
+if ! which curl >/dev/null 2>&1; then
+  echo "`curl` is not installed. Please install it."
   echo
   echo "On MacOS, it can be installed via HomeBrew (https://brew.sh/)"
-  echo "using the command `brew install wget`"
+  echo "using the command `brew install curl`"
   exit 1
 fi
 
 echo "Downloading data"
 if [ x"$CKAN_API_KEY" = "x" ]; then
-    wget -c -t 0 -i urls.txt
+    while read URL; do
+        echo "Downloading: $URL"
+        curl -O -L -C - "$URL"
+    done < urls.txt
 else
-    wget --header="Authorization: $CKAN_API_KEY" -c -t 0 -i urls.txt
+    while read URL; do
+        echo "Downloading: $URL"
+        curl -O -L -C - -H "Authorization: $CKAN_API_KEY" "$URL"
+    done < urls.txt
 fi
 
 echo "Data download complete. Verifying checksums:"

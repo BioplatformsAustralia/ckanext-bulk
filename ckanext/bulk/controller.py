@@ -1,5 +1,7 @@
 import logging
 import ckan.plugins as p
+import datetime
+import string
 from ckan.common import request, c
 from pylons import config
 from ckan import model
@@ -13,6 +15,41 @@ _ = p.toolkit._
 
 
 log = logging.getLogger(__name__)
+
+
+def timestamp():
+    return datetime.datetime.now().strftime("%Y%m%dT%H%M")
+
+
+def make_safe(s):
+    return "".join(
+        t for t in s if t in string.digits or t in string.ascii_letters or t == "-"
+    )
+
+
+def prefix_from_components(components):
+    # note: limit length of the above query built components of the prefix
+    components = [make_safe(c) for c in components]
+    return "{}_{}".format("_".join(components)[:120], timestamp())
+
+
+def dataset_to_zip_prefix(_id):
+    return prefix_from_components([_id])
+
+
+def query_to_zip_prefix(request, name=None):
+    def add_param(c, p):
+        v = request.params.get(p, "").strip()
+        if v:
+            c.append(v)
+
+    components = []
+    if name:
+        components.append(name)
+    add_param(components, "q")
+    add_param(components, "res-format")
+    add_param(components, "tags")
+    return prefix_from_components(components)
 
 
 class BulkOrganizationController(OrganizationController):
@@ -59,7 +96,7 @@ class BulkOrganizationController(OrganizationController):
         resources = list(_resources())
 
         return generate_bulk_zip(
-            name,
+            query_to_zip_prefix(request, name),
             "Search of organization: {}".format(name),
             c.userobj,
             packages,
@@ -140,7 +177,11 @@ class BulkSearchController(BaseController):
         resources = list(_resources())
 
         return generate_bulk_zip(
-            "search", "Search of all datasets", c.userobj, packages, resources
+            query_to_zip_prefix(request),
+            "Search of all datasets",
+            c.userobj,
+            packages,
+            resources,
         )
 
 
@@ -169,5 +210,9 @@ class BulkPackageController(BaseController):
 
         name = pkg_dict["name"]
         return generate_bulk_zip(
-            name, "Dataset: %s" % (name,), c.userobj, [pkg_dict], pkg_dict["resources"]
+            dataset_to_zip_prefix(id),
+            "Dataset: %s" % (name,),
+            c.userobj,
+            [pkg_dict],
+            pkg_dict["resources"],
         )

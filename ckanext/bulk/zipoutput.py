@@ -62,10 +62,10 @@ def get_timestamp():
         h.get_display_timezone()).strftime('%Y-%m-%dT%H:%M:%S.%f%z')
 
 
-def objects_by_attr(objects, attr):
+def objects_by_attr(objects, attr, default):
     by_attr = defaultdict(list)
     for obj in objects:
-        by_attr[obj[attr]].append(obj)
+        by_attr[obj.get(attr, default)].append(obj)
     return by_attr
 
 
@@ -142,14 +142,14 @@ def generate_bulk_zip(pfx, title, user, packages, resources):
     zf.writestr(ip('md5sum.txt'), u'\n'.join(
         '%s  %s' % t for t in md5sums) + u'\n')
 
-    for typ, typ_packages in objects_by_attr(packages, 'type').items():
+    for typ, typ_packages in objects_by_attr(packages, 'type', 'unknown').items():
         # some objects may not have a ckanext-scheming schema
         if typ is None:
             continue
         zf.writestr(ip('package_metadata/{}.csv'.format(typ)),
                     schema_to_csv(typ, 'dataset_fields', typ_packages))
 
-    for typ, typ_resources in objects_by_attr(resources, 'resource_type').items():
+    for typ, typ_resources in objects_by_attr(resources, 'resource_type', 'unknown').items():
         # some objects may not have a ckanext-scheming schema
         if typ is None:
             continue

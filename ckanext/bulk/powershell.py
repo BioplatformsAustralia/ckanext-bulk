@@ -62,7 +62,7 @@ function VerifyMD5([String]$filename, [String]$expected_md5)
 'Commencing bulk download of data from CKAN:'
 ''
 
-$urls = Get-Content 'urls.txt'
+$urls = Get-Content '{{ urls_fname }}'
 ForEach ($line in $urls) {
     DownloadURL $line
 }
@@ -71,7 +71,7 @@ ForEach ($line in $urls) {
 ''
 'Verifying file checksums:'
 ''
-$md5s = Get-Content 'md5sum.txt'
+$md5s = Get-Content '{{ md5sum_fname }}'
 ForEach ($line in $md5s) {
     $md5, $filename = $line.Split(" ",[StringSplitOptions]'RemoveEmptyEntries')
     VerifyMD5 $filename $md5

@@ -30,18 +30,11 @@ if ! which curl >/dev/null 2>&1; then
 fi
 
 echo "Downloading data"
-if [ x"$CKAN_API_KEY" = "x" ]; then
-    while read URL; do
-        echo "Downloading: $URL"
-        curl -O -L -C - "$URL"
-    done < urls.txt
-else
-    while read URL; do
-        echo "Downloading: $URL"
-        curl -O -L -C - -H "Authorization: $CKAN_API_KEY" "$URL"
-    done < urls.txt
-fi
+while read URL; do
+    echo "Downloading: $URL"
+    curl -O -L -C - -H "Authorization: $CKAN_API_KEY" "$URL"
+done < {{ urls_fname }}
 
 echo "Data download complete. Verifying checksums:"
-md5sum -c md5sum.txt 2>&1 | tee md5sum.log
+md5sum -c {{ md5sum_fname }} 2>&1 | tee tmp/md5sum.log
 """

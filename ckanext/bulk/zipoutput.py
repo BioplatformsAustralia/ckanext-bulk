@@ -19,18 +19,12 @@ BULK_EXPLANATORY_NOTE = """\
 CKAN Bulk Download
 ------------------
 
-{title}
+{title} {prefix}
 
 Bulk download package generated:
 {timestamp}
 
 This archive contains the following files:
-
-urls.txt:
-A list of all URLs matching the CKAN search you performed.
-
-md5sum.txt:
-MD5 checksums for all files.
 
 download.ps1:
 Windows PowerShell script, which when executed will download the files,
@@ -38,15 +32,20 @@ and then checksum them. There are no dependencies other than PowerShell.
 
 download.sh:
 UNIX shell script, which when executed will download the files,
-and then checksum then. This is supported on any Linux or MacOS/BSD
+and then checksum them. This is supported on any Linux or MacOS/BSD
 system, so long as `curl` is installed.
 
 package_metadata folder:
-Contains metadata spreadsheets for all selected packages, grouped by
-package schema. Each package will contain one or more resources.
+Contains metadata spreadsheets for all selected data packages, grouped by
+the type of package (schema). Each data package will contain one or more
+resources.
 
 resource_metadata folder:
-Contains metadata spreadsheets for all selected resources (files).
+Contains metadata spreadsheets for all selected data resources (files).
+
+tmp folder:
+This folder contains files required by the download scripts. Its
+contents can be ignored.
 """
 
 
@@ -120,7 +119,11 @@ def generate_bulk_zip(pfx, title, user, packages, resources):
                 h.url_for(controller="user", action="read", id=user.name),
             )
         contents = (
-            jinja2.Environment().from_string(contents).render(user_page=user_page)
+            jinja2.Environment()
+            .from_string(contents)
+            .render(
+                user_page=user_page, md5sum_fname=md5sum_fname, urls_fname=urls_fname
+            )
         )
         zf.writestr(info, contents.encode("utf-8"))
 
@@ -141,17 +144,25 @@ def generate_bulk_zip(pfx, title, user, packages, resources):
     zf = ZipFile(fd, mode="w", compression=ZIP_DEFLATED)
     zf.writestr(
         ip("README.txt"),
-        str_crlf(BULK_EXPLANATORY_NOTE.format(timestamp=get_timestamp(), title=title)),
+        str_crlf(
+            BULK_EXPLANATORY_NOTE.format(
+                prefix=pfx, timestamp=get_timestamp(), title=title
+            )
+        ),
     )
-    zf.writestr(ip("urls.txt"), u"\n".join(urls) + u"\n")
-    zf.writestr(ip("md5sum.txt"), u"\n".join("%s  %s" % t for t in md5sums) + u"\n")
+
+    urls_fname = "tmp/{}_urls.txt".format(pfx)
+    md5sum_fname = "tmp/{}_md5sum.txt".format(pfx)
+
+    zf.writestr(ip(urls_fname), u"\n".join(urls) + u"\n")
+    zf.writestr(ip(md5sum_fname), u"\n".join("%s  %s" % t for t in md5sums) + u"\n")
 
     for typ, typ_packages in objects_by_attr(packages, "type", "unknown").items():
         # some objects may not have a ckanext-scheming schema
         if typ is None:
             continue
         zf.writestr(
-            ip("package_metadata/{}.csv".format(typ)),
+            ip("package_metadata/package_metadata_{}_{}.csv".format(pfx, typ)),
             schema_to_csv(typ, "dataset_fields", typ_packages),
         )
 
@@ -162,7 +173,7 @@ def generate_bulk_zip(pfx, title, user, packages, resources):
         if typ is None:
             continue
         zf.writestr(
-            ip("resource_metadata/{}.csv".format(typ)),
+            ip("resource_metadata/resource_metadata_{}_{}.csv".format(pfx, typ)),
             schema_to_csv(typ, "resource_fields", typ_resources),
         )
 

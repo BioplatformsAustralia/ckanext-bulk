@@ -1,4 +1,3 @@
-
 import logging
 from ckan.plugins import toolkit, IConfigurer, IRoutes, SingletonPlugin, implements
 
@@ -11,24 +10,27 @@ class BulkPlugin(SingletonPlugin):
     implements(IRoutes, inherit=True)
 
     def after_map(self, map):
-        org_controller = 'ckanext.bulk.controller:BulkOrganizationController'
+        org_controller = "ckanext.bulk.controller:BulkOrganizationController"
         map.connect(
-            'bulk_organization_file_list',
-            '/bulk/organization/{id}/file_list',
-            action='file_list',
-            controller=org_controller)
-        pkg_controller = 'ckanext.bulk.controller:BulkSearchController'
+            "bulk_organization_file_list",
+            "/bulk/organization/{id}/file_list",
+            action="file_list",
+            controller=org_controller,
+        )
+        pkg_controller = "ckanext.bulk.controller:BulkSearchController"
         map.connect(
-            'bulk_package_search_list',
-            '/bulk/dataset/search_list',
-            action='file_list',
-            controller=pkg_controller)
-        pkg_controller = 'ckanext.bulk.controller:BulkPackageController'
+            "bulk_package_search_list",
+            "/bulk/dataset/search_list",
+            action="file_list",
+            controller=pkg_controller,
+        )
+        pkg_controller = "ckanext.bulk.controller:BulkPackageController"
         map.connect(
-            'bulk_package_file_list',
-            '/bulk/dataset/{id}/file_list',
-            action='file_list',
-            controller=pkg_controller)
+            "bulk_package_file_list",
+            "/bulk/dataset/{id}/file_list",
+            action="file_list",
+            controller=pkg_controller,
+        )
         return map
 
     def update_config(self, config):

@@ -1,4 +1,4 @@
-SH_TEMPLATE = '''\
+SH_TEMPLATE = """\
 #!/bin/sh
 
 #
@@ -44,4 +44,4 @@ fi
 
 echo "Data download complete. Verifying checksums:"
 md5sum -c md5sum.txt 2>&1 | tee md5sum.log
-'''
+"""

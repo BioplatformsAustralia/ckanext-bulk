@@ -1,4 +1,4 @@
-POWERSHELL_TEMPLATE = '''\
+POWERSHELL_TEMPLATE = """\
 #!/usr/bin/env pwsh
 
 {% if user_page %}
@@ -77,4 +77,4 @@ ForEach ($line in $md5s) {
     VerifyMD5 $filename $md5
 }
 
-'''
+"""

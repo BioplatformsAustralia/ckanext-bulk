@@ -35,10 +35,25 @@ UNIX shell script, which when executed will download the files,
 and then checksum them. This is supported on any Linux or MacOS/BSD
 system, so long as `curl` is installed.
 
+Before running either of these scripts, please set the CKAN_API_KEY
+environment variable.
+
+You can find your API Key by browsing to:
+{user_page}
+
+The API key has the format:
+xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx
+To set the environment variable in Linux/MacOS/Unix, use:
+export CKAN_API_KEY=xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx
+
+On Microsoft Windows, within Powershell, use:
+$env:CKAN_API_KEY=xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx
+
 package_metadata folder:
 Contains metadata spreadsheets for all selected data packages, grouped by
 the type of package (schema). Each data package will contain one or more
-resources.
+resources. This metadata is an amalgamation of all metadata, including
+sample contextual metadata and processing metadata.
 
 resource_metadata folder:
 Contains metadata spreadsheets for all selected data resources (files).
@@ -105,19 +120,20 @@ def encode_field(field_name):
 
 
 def generate_bulk_zip(pfx, title, user, packages, resources):
+    user_page = None
+    site_url = config.get("ckan.site_url").rstrip("/")
+    if user:
+        user_page = "%s/%s" % (
+            site_url,
+            h.url_for(controller="user", action="read", id=user.name),
+        )
+
     def ip(s):
         return pfx + "/" + s
 
     def write_script(filename, contents):
         info = ZipInfo(ip(filename))
         info.external_attr = 0755 << 16L  # mark script as executable
-        user_page = None
-        if user:
-            site_url = config.get("ckan.site_url").rstrip("/")
-            user_page = "%s/%s" % (
-                site_url,
-                h.url_for(controller="user", action="read", id=user.name),
-            )
         contents = (
             jinja2.Environment()
             .from_string(contents)
@@ -146,7 +162,7 @@ def generate_bulk_zip(pfx, title, user, packages, resources):
         ip("README.txt"),
         str_crlf(
             BULK_EXPLANATORY_NOTE.format(
-                prefix=pfx, timestamp=get_timestamp(), title=title
+                prefix=pfx, timestamp=get_timestamp(), title=title, user_page=user_page
             )
         ),
     )

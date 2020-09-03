@@ -3,12 +3,12 @@ from setuptools import setup
 
 setup(
     name='ckanext-bulk',
-    version='1.2.11',
+    version='1.2.12',
     description='',
     license='GPL3',
-    author='CCG, Murdoch University',
-    author_email='tech@ccg.murdoch.edu.au',
-    url='https://github.com/muccg/ckanext-bulk/',
+    author='Bioplatforms Australia',
+    author_email='help@bioplatforms.com',
+    url='https://github.com/BioplatformsAustralia/ckanext-bulk/',
     namespace_packages=['ckanext'],
     packages=['ckanext.bulk'],
     zip_safe=False,

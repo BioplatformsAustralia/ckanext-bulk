@@ -58,9 +58,24 @@ sample contextual metadata and processing metadata.
 resource_metadata folder:
 Contains metadata spreadsheets for all selected data resources (files).
 
+QUERY.txt:
+Text file which contains metadata about the download results and the original
+query
+
 tmp folder:
 This folder contains files required by the download scripts. Its
 contents can be ignored.
+"""
+
+QUERY_TEMPLATE = """\
+Title        : {title}
+Prefix       : {prefix}
+Timestamp    : {timestamp}
+User Page    : {user_page}
+QueryURL     : {query_url}
+Download URL : {download_url}
+URL Count    : {url_count}
+MD5 Sum Count: {md5_count}
 """
 
 
@@ -119,7 +134,9 @@ def encode_field(field_name):
     return field_name.encode("utf8")
 
 
-def generate_bulk_zip(pfx, title, user, packages, resources):
+def generate_bulk_zip(
+    pfx, title, user, packages, resources, query_url=None, download_url=None
+):
     user_page = None
     site_url = config.get("ckan.site_url").rstrip("/")
     if user:
@@ -195,6 +212,22 @@ def generate_bulk_zip(pfx, title, user, packages, resources):
 
     write_script("download.sh", SH_TEMPLATE)
     write_script("download.ps1", POWERSHELL_TEMPLATE)
+
+    zf.writestr(
+        ip("QUERY.txt"),
+        str_crlf(
+            QUERY_TEMPLATE.format(
+                prefix=pfx,
+                timestamp=get_timestamp(),
+                title=title,
+                user_page=user_page,
+                url_count=len(urls),
+                md5_count=len(md5sums),
+                query_url=query_url,
+                download_url=download_url,
+            )
+        ),
+    )
 
     zf.close()
     return fd.getvalue()

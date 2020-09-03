@@ -11,6 +11,7 @@ add a button that, when clicked, downloads a Zip file containing:
   - a UNIX shell script which downloads those resources with `curl`, then confirms the checksums match
   - CSV files detailing all metadata for each package (one CSV per dataset schema)
   - CSV files detailing all metadata for each resource (one CSV per resource schema)
+  - a metadata file containing information about the original query and quantity of results
 
 Snippets are provided for the organization and package search CKAN views.
 

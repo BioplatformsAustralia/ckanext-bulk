@@ -1,5 +1,6 @@
 import logging
 import ckan.plugins as p
+import ckan.lib.helpers as h
 import datetime
 import string
 from ckan.common import request, c
@@ -95,12 +96,34 @@ class BulkOrganizationController(OrganizationController):
         packages = [t for t in c.page.items]
         resources = list(_resources())
 
+        site_url = config.get("ckan.site_url").rstrip("/")
+        query_url = "%s%s" % (
+            site_url,
+            h.add_url_param(
+                controller="organization",
+                action="read",
+                extras={"id": id},
+                new_params=request.params,
+            ),
+        )
+        download_url = "%s%s" % (
+            site_url,
+            h.add_url_param(
+                controller=self.controller,
+                action="file_list",
+                extras={"id": id},
+                new_params=request.params,
+            ),
+        )
+
         return generate_bulk_zip(
             query_to_zip_prefix(request, name),
             "Search of organization: {}".format(name),
             c.userobj,
             packages,
             resources,
+            query_url,
+            download_url,
         )
 
 
@@ -209,10 +232,23 @@ class BulkPackageController(BaseController):
             abort(404, _("Dataset not found"))
 
         name = pkg_dict["name"]
+
+        site_url = config.get("ckan.site_url").rstrip("/")
+        query_url = "%s%s" % (
+            site_url,
+            h.url_for(controller="package", action="read", id=name),
+        )
+        download_url = "%s%s" % (
+            site_url,
+            h.url_for(controller=self.controller, action="file_list", id=id),
+        )
+
         return generate_bulk_zip(
             dataset_to_zip_prefix(id),
             "Dataset: %s" % (name,),
             c.userobj,
             [pkg_dict],
             pkg_dict["resources"],
+            query_url,
+            download_url,
         )

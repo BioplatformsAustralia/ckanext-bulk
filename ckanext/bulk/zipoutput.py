@@ -123,7 +123,7 @@ def generate_bulk_zip(pfx, title, user, packages, resources):
     user_page = None
     site_url = config.get("ckan.site_url").rstrip("/")
     if user:
-        user_page = "%s/%s" % (
+        user_page = "%s%s" % (
             site_url,
             h.url_for(controller="user", action="read", id=user.name),
         )

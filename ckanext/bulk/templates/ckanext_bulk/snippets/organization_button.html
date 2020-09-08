@@ -1,2 +1,8 @@
 {% set url = h.add_url_param(controller='ckanext.bulk.controller:BulkOrganizationController', action='file_list', extras={'id': id}, new_params=request.params) %}
-<a title="A zip archive will download. Extract it, and then follow the instructions in the README file to download this data in bulk." class="btn btn-default" href="{{ url }}" target="_blank"><i class="fa fa-download"></i> {{ _('Bulk download (metadata and data)') }}</a>
+{% if c.userobj %}
+   <a title="A zip archive will download. Extract it, and then follow the instructions in the README file to download this data in bulk." class="btn btn-default" href="{{ url }}" target="_blank"><i class="fa fa-download"></i> {{ _('Bulk download (metadata and data)') }}</a>
+{% else %}
+   <span class="d-inline-block" data-toggle="tooltip" title="Register or login to download">
+      <a class="btn btn-default disabled" href="#" target="_blank" tabindex="-1"><i class="fa fa-download"></i> {{ _('Bulk download (metadata and data)') }}</a>
+   </span>
+{% endif %}

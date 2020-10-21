@@ -29,6 +29,14 @@ if ! which curl >/dev/null 2>&1; then
   exit 1
 fi
 
+if ! which md5sum >/dev/null 2>&1; then
+  echo "`md5sum` is not installed. Please install it."
+  echo
+  echo "On MacOS, it can be installed via HomeBrew (https://brew.sh/)"
+  echo "using the command `brew install md5sha1sum`"
+  exit 1
+fi
+
 echo "Downloading data"
 while read URL; do
     echo "Downloading: $URL"

@@ -120,6 +120,9 @@ echo "Downloading data"
 while read URL; do
   echo "Downloading: $URL"
   $CURL -O -L -C - -H "Authorization: $CKAN_API_KEY" "$URL"
+  if [ $? -ne 0 ] ; then
+     echo "Error downloading: $URL"
+  fi
 done < {{ urls_fname }}
 
 echo "Data download complete. Verifying checksums:"

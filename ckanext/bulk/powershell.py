@@ -16,7 +16,7 @@ if (!$apikey) {
   'export CKAN_API_KEY=xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx'
   ''
   'On Microsoft Windows, within Powershell, use:'
-  '$env:CKAN_API_KEY=xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx'
+  '$env:CKAN_API_KEY="xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx"'
   exit 1
 }
 {% else %}

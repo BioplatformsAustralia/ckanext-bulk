@@ -47,7 +47,7 @@ To set the environment variable in Linux/MacOS/Unix, use:
 export CKAN_API_KEY=xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx
 
 On Microsoft Windows, within Powershell, use:
-$env:CKAN_API_KEY=xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx
+$env:CKAN_API_KEY="xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx"
 
 package_metadata folder:
 Contains metadata spreadsheets for all selected data packages, grouped by

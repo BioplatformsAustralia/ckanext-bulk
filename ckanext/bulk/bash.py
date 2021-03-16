@@ -88,7 +88,7 @@ fi
 echo "Downloading data"
 while read URL; do
   echo "Downloading: $URL"
-  curl -O -L -C - -H "Authorization: $CKAN_API_KEY" "$URL"
+  $CURL -O -L -C - -H "Authorization: $CKAN_API_KEY" "$URL"
 done < {{ urls_fname }}
 
 echo "Data download complete. Verifying checksums:"

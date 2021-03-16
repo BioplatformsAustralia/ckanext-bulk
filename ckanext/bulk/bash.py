@@ -1,6 +1,8 @@
 SH_TEMPLATE = """\
 #!/bin/bash
 
+# download.sh
+# Bulk download tool for the Bioplatforms Australia Data Portal
 #
 # This UNIX shell script was automatically generated.
 #
@@ -21,6 +23,8 @@ if [ x"$CKAN_API_KEY" = "x" ]; then
 fi
 {% endif %}
 
+# Check for required programs
+
 if ! which curl >/dev/null 2>&1; then
   echo "`curl` is not installed. Please install it."
   echo
@@ -37,10 +41,54 @@ if ! which md5sum >/dev/null 2>&1; then
   exit 1
 fi
 
+# Check program versions
+
+CURL=`which curl`
+# 7.58 required for correct Authorization header support
+CURL_VERSION_REQUIRED="7.58"
+CURL_VERSION=$($CURL --version | head -1 | awk '{print $2}')
+
+function max()
+{
+  local m="$1"
+  for n in "$@"
+  do
+    [ "$n" -gt "$m" ] && m="$n"
+  done
+  echo "$m"
+}
+
+# from https://apple.stackexchange.com/a/261863
+function compare_versions()
+{
+  local v1=( $(echo "$1" | tr '.' ' ') )
+  local v2=( $(echo "$2" | tr '.' ' ') )
+  local len="$(max "${#v1[*]}" "${#v2[*]}")"
+  for ((i=0; i<len; i++))
+  do
+    [ "${v1[i]:-0}" -gt "${v2[i]:-0}" ] && return 1
+    [ "${v1[i]:-0}" -lt "${v2[i]:-0}" ] && return 2
+  done
+  return 0
+}
+
+compare_versions $CURL_VERSION $CURL_VERSION_REQUIRED
+if [ $? -eq 2 ]; then
+  echo "Your 'curl' version is outdated."
+  echo
+  echo "Path was                   : $CURL"
+  echo
+  echo "Minimum version required is: $CURL_VERSION_REQUIRED"
+  echo "Version available is       : $CURL_VERSION"
+  exit 1
+fi
+
+# Undertake download
+
 echo "Downloading data"
 while read URL; do
-    echo "Downloading: $URL"
-    curl -O -L -C - -H "Authorization: $CKAN_API_KEY" "$URL"
+  echo "Downloading: $URL"
+  curl -O -L -C - -H "Authorization: $CKAN_API_KEY" "$URL"
 done < {{ urls_fname }}
 
 echo "Data download complete. Verifying checksums:"

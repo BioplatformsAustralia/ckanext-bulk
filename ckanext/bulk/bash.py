@@ -41,9 +41,23 @@ if ! which md5sum >/dev/null 2>&1; then
   exit 1
 fi
 
+CURL=`which curl`
+
+# if on MacOS, favour homebrew curl over system curl
+case "$OSTYPE" in
+  darwin*)
+    HBCURL="/usr/local/opt/curl/bin/curl"
+    if [ -f $HBCURL && -x $HBCURL ] ; then
+        echo "Using curl installed via homebrew"
+        CURL="$HBCURL"
+    fi
+    ;;
+  *)
+    ;;
+esac
+
 # Check program versions
 
-CURL=`which curl`
 # 7.58 required for correct Authorization header support
 CURL_VERSION_REQUIRED="7.58"
 CURL_VERSION=$($CURL --version | head -1 | awk '{print $2}')

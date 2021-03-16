@@ -1,5 +1,5 @@
 SH_TEMPLATE = """\
-#!/bin/sh
+#!/bin/bash
 
 #
 # This UNIX shell script was automatically generated.

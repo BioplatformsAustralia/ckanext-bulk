@@ -23,6 +23,15 @@ if [ x"$CKAN_API_KEY" = "x" ]; then
 fi
 {% endif %}
 
+# Check we are being run from a suitable location
+
+if [ ! -f {{ urls_fname }} ]; then
+  echo "{{ urls_fname }} not found"
+  echo
+  echo "Please change to the directory containing the download.sh script"
+  exit 1
+fi
+
 # Check for required programs
 
 if ! which curl >/dev/null 2>&1; then

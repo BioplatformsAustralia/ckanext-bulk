@@ -46,7 +46,12 @@ function VerifyMD5([String]$filename, [String]$expected_md5)
 {
     $md5hash = new-object -TypeName System.Security.Cryptography.MD5CryptoServiceProvider
     try {
-        $actual_md5 = [System.BitConverter]::ToString($md5hash.ComputeHash([System.IO.File]::ReadAllBytes($filename))).Replace('-', '').toLower();
+        $file = [System.IO.File]::Open($filename,[System.IO.Filemode]::Open, [System.IO.FileAccess]::Read)
+        try {
+            $actual_md5 = [System.BitConverter]::ToString($md5hash.ComputeHash($file)).Replace('-', '').toLower()
+        } finally {
+            $file.Dispose()
+        }
     } catch [System.IO.FileNotFoundException] {
         $filename + ": FAILED open or read"
         return

@@ -13,12 +13,20 @@ if [ x"$CKAN_API_KEY" = "x" ]; then
   echo "You can find your API Key by browsing to:"
   echo "{{ user_page }}"
   echo
+  echo "It will be in the bottom left hand corner of the web page."
+  echo
   echo "The API key has the format:"
   echo "xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx"
   echo
-  echo "To set the environment variable in Linux/MacOS/Unix, use:"
+  echo "To set the environment variable in Linux/MacOS/Unix, use"
+  echo "the following command before running download.sh"
+  echo "substituting your API key as required:"
+  echo
   echo "export CKAN_API_KEY=xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx"
-  echo ""
+  echo
+  echo "You can check if it has been set correctly with the command:"
+  echo
+  echo "printenv CKAN_API_KEY"
   exit 1
 fi
 {% endif %}

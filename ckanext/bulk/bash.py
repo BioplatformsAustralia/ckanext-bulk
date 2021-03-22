@@ -94,7 +94,8 @@ function compare_versions()
 {
   local v1=( $(echo "$1" | tr '.' ' ') )
   local v2=( $(echo "$2" | tr '.' ' ') )
-  local len="$(max "${#v1[*]}" "${#v2[*]}")"
+  {# quoting to get around jinja templating comment #}
+  local len="$(max "${{ '{#' }}v1[*]}" "${{ '{#' }}v2[*]}")"
   for ((i=0; i<len; i++))
   do
     [ "${v1[i]:-0}" -gt "${v2[i]:-0}" ] && return 1

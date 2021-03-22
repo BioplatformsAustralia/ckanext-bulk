@@ -3,6 +3,7 @@ import ckan.plugins as p
 import ckan.lib.helpers as h
 import datetime
 import string
+import hashlib
 from ckan.common import request, c
 from pylons import config
 from ckan import model
@@ -29,9 +30,12 @@ def make_safe(s):
 
 
 def prefix_from_components(components):
-    # note: limit length of the above query built components of the prefix
+    # note: a hash is generated of the components to avoid long paths
     components = [make_safe(c) for c in components]
-    return "{}_{}".format("_".join(components)[:120], timestamp())
+    component_hash = hashlib.sha1(("_".join(components)).encode("utf-8")).hexdigest()[
+        -8:
+    ]
+    return "bpa_{}_{}".format(component_hash, timestamp())
 
 
 def dataset_to_zip_prefix(_id):

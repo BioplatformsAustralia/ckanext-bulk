@@ -101,6 +101,7 @@ class BulkOrganizationController(OrganizationController):
         resources = list(_resources())
 
         site_url = config.get("ckan.site_url").rstrip("/")
+	query = request.params.get(u'q', u'')
         query_url = "%s%s" % (
             site_url,
             h.add_url_param(
@@ -126,6 +127,7 @@ class BulkOrganizationController(OrganizationController):
             c.userobj,
             packages,
             resources,
+            query,
             query_url,
             download_url,
         )
@@ -227,6 +229,7 @@ class BulkSearchController(BaseController):
             c.userobj,
             packages,
             resources,
+	    q,
             query_url,
             download_url,
         )
@@ -258,6 +261,7 @@ class BulkPackageController(BaseController):
         name = pkg_dict["name"]
 
         site_url = config.get("ckan.site_url").rstrip("/")
+	query = "id:%s" % (name,)
         query_url = "%s%s" % (
             site_url,
             h.url_for(controller="package", action="read", id=name),
@@ -273,6 +277,7 @@ class BulkPackageController(BaseController):
             c.userobj,
             [pkg_dict],
             pkg_dict["resources"],
+            query,
             query_url,
             download_url,
         )

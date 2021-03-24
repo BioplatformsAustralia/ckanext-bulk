@@ -72,6 +72,7 @@ Title        : {title}
 Prefix       : {prefix}
 Timestamp    : {timestamp}
 User Page    : {user_page}
+Query        : {query}
 QueryURL     : {query_url}
 Download URL : {download_url}
 URL Count    : {url_count}
@@ -135,7 +136,7 @@ def encode_field(field_name):
 
 
 def generate_bulk_zip(
-    pfx, title, user, packages, resources, query_url=None, download_url=None
+    pfx, title, user, packages, resources, query=None, query_url=None, download_url=None
 ):
     user_page = None
     site_url = config.get("ckan.site_url").rstrip("/")
@@ -223,6 +224,7 @@ def generate_bulk_zip(
                 user_page=user_page,
                 url_count=len(urls),
                 md5_count=len(md5sums),
+                query=query,
                 query_url=query_url,
                 download_url=download_url,
             )

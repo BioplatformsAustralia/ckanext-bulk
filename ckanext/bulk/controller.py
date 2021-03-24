@@ -135,7 +135,7 @@ class BulkSearchController(BaseController):
     controller = "ckanext.bulk.controller:BulkSearchController"
 
     def __init__(self, *args, **kwargs):
-        super(BaseController, self).__init__(*args, **kwargs)
+        super(BulkSearchController, self).__init__(*args, **kwargs)
         self.limit = p.toolkit.asint(config.get("ckanext.bulk.limit", 100))
 
     def file_list(self):
@@ -203,12 +203,32 @@ class BulkSearchController(BaseController):
         packages = [t for t in results]
         resources = list(_resources())
 
+        site_url = config.get("ckan.site_url").rstrip("/")
+        query_url = "%s%s" % (
+            site_url,
+            h.add_url_param(
+                controller="package",
+                action="search",
+                new_params=request.params,
+            ),
+        )
+        download_url = "%s%s" % (
+            site_url,
+            h.add_url_param(
+                controller=self.controller,
+                action="file_list",
+                new_params=request.params,
+            ),
+        )
+
         return generate_bulk_zip(
             query_to_zip_prefix(request),
             "Search of all datasets",
             c.userobj,
             packages,
             resources,
+            query_url,
+            download_url,
         )
 
 

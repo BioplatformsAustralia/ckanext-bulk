@@ -14,7 +14,6 @@ from .bash import SH_TEMPLATE
 from .powershell import POWERSHELL_TEMPLATE
 from ckanext.scheming.helpers import scheming_get_dataset_schema
 
-
 BULK_EXPLANATORY_NOTE = """\
 CKAN Bulk Download
 ------------------
@@ -79,6 +78,15 @@ URL Count    : {url_count}
 MD5 Sum Count: {md5_count}
 """
 
+amd_data_types = ["base-genomics-amplicon", "base-genomics-amplicon-control", "base-metagenomics", "base-site-image",
+                  "mm-genomics-amplicon", "mm-genomics-amplicon-control", "mm-metagenomics", "mm-metatranscriptome",
+                  "amdb-metagenomics-novaseq", "amdb-metagenomics-novaseq-control", "amdb-genomics-amplicon",
+                  "amdb-genomics-amplicon-control"]
+
+# these are labels that should always be included over their corresponding 'less descriptive' field_name
+mandatory_field_labels = ['Organization', 'Title', 'Description', 'URL', 'Tags', 'Geospatial Coverage', 'License',
+                          'Resource Permissions']
+
 
 def str_crlf(s):
     """
@@ -106,6 +114,14 @@ def debug(s):
     sys.stderr.flush()
 
 
+def choose_header_label(typ, schema_key, field):
+    field_label = field["label"].encode("utf8")
+    if schema_key == "dataset_fields" and typ in amd_data_types and field_label not in mandatory_field_labels:
+        return field["field_name"]
+    else:
+        return field_label
+
+
 def schema_to_csv(typ, schema_key, objects):
     # Note: as we're in Python 2, we have to do a bit of a dance here with unicode --
     # we must make sure everything we put into the writer has been encoded
@@ -119,7 +135,7 @@ def schema_to_csv(typ, schema_key, objects):
     field_names = []
     for field in schema[schema_key]:
         field_names.append(field["field_name"])
-        header.append(field["label"].encode("utf8"))
+        header.append(choose_header_label(typ, schema_key, field))
     w.writerow(header)
     for obj in sorted(objects, key=lambda p: p["name"]):
         w.writerow(
@@ -136,7 +152,7 @@ def encode_field(field_name):
 
 
 def generate_bulk_zip(
-    pfx, title, user, packages, resources, query=None, query_url=None, download_url=None
+        pfx, title, user, packages, resources, query=None, query_url=None, download_url=None
 ):
     user_page = None
     site_url = config.get("ckan.site_url").rstrip("/")
@@ -154,8 +170,8 @@ def generate_bulk_zip(
         info.external_attr = 0755 << 16L  # mark script as executable
         contents = (
             jinja2.Environment()
-            .from_string(contents)
-            .render(
+                .from_string(contents)
+                .render(
                 user_page=user_page, md5sum_fname=md5sum_fname, urls_fname=urls_fname
             )
         )
@@ -201,7 +217,7 @@ def generate_bulk_zip(
         )
 
     for typ, typ_resources in objects_by_attr(
-        resources, "resource_type", "unknown"
+            resources, "resource_type", "unknown"
     ).items():
         # some objects may not have a ckanext-scheming schema
         if typ is None:

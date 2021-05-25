@@ -12,6 +12,7 @@ from ckan.common import response
 from io import BytesIO
 from .bash import SH_TEMPLATE
 from .powershell import POWERSHELL_TEMPLATE
+from .python import PY_TEMPLATE
 from ckanext.scheming.helpers import scheming_get_dataset_schema
 
 BULK_EXPLANATORY_NOTE = """\
@@ -170,9 +171,13 @@ def generate_bulk_zip(
         info.external_attr = 0755 << 16L  # mark script as executable
         contents = (
             jinja2.Environment()
-                .from_string(contents)
-                .render(
-                user_page=user_page, md5sum_fname=md5sum_fname, urls_fname=urls_fname
+            .from_string(contents)
+            .render(
+                user_page=user_page,
+                md5sum_fname=md5sum_fname,
+                urls_fname=urls_fname,
+                prefix=pfx,
+                username=user.name,
             )
         )
         zf.writestr(info, contents.encode("utf-8"))
@@ -229,6 +234,7 @@ def generate_bulk_zip(
 
     write_script("download.sh", SH_TEMPLATE)
     write_script("download.ps1", POWERSHELL_TEMPLATE)
+    write_script("download.py", PY_TEMPLATE)
 
     zf.writestr(
         ip("QUERY.txt"),

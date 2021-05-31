@@ -27,6 +27,11 @@ Bulk download package generated:
 
 This archive contains the following files:
 
+download.py:
+Python 3 script, which when executed will download the files,
+and then checksum them.  This script is cross platform and is supported
+on Linux / MacOS / Windows hosts. Requires the `requests` module.
+
 download.ps1:
 Windows PowerShell script, which when executed will download the files,
 and then checksum them. There are no dependencies other than PowerShell.

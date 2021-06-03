@@ -161,12 +161,14 @@ def generate_bulk_zip(
         pfx, title, user, packages, resources, query=None, query_url=None, download_url=None
 ):
     user_page = None
+    username = ""
     site_url = config.get("ckan.site_url").rstrip("/")
     if user:
         user_page = "%s%s" % (
             site_url,
             h.url_for(controller="user", action="read", id=user.name),
         )
+	username = user.name
 
     def ip(s):
         return pfx + "/" + s
@@ -182,7 +184,7 @@ def generate_bulk_zip(
                 md5sum_fname=md5sum_fname,
                 urls_fname=urls_fname,
                 prefix=pfx,
-                username=user.name,
+                username=username,
             )
         )
         zf.writestr(info, contents.encode("utf-8"))

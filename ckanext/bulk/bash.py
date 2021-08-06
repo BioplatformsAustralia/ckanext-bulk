@@ -64,7 +64,7 @@ CURL=`which curl`
 case "$OSTYPE" in
   darwin*)
     HBCURL="/usr/local/opt/curl/bin/curl"
-    if [ -f $HBCURL && -x $HBCURL ] ; then
+    if [ -f $HBCURL -a -x $HBCURL ] ; then
         echo "Using curl installed via homebrew"
         CURL="$HBCURL"
     fi

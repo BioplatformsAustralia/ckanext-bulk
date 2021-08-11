@@ -258,6 +258,9 @@ def main():
     # TODO: Add argument parsing to enable runtime setting of
     # download location, debug level, API Key
 
+    process_downloads(api_key, url_list, md5_file, script_dir)
+
+def process_downloads(api_key, url_list, md5_file, target_dir):
     # Open MD5 file and populate cache
 
     md5 = {}
@@ -288,12 +291,13 @@ def main():
     # Open list of URLs
 
     logger.info("%d files to download" % (len(md5),))
+    logger.info("Manifest: %s" % (url_list,))
 
     # For each URL
     with open(url_list, "r") as urlfh:
         for url in urlfh.readlines():
             filename = url.strip().split("/")[-1]
-            dl_path = f"{script_dir}{os.path.sep}{filename}"
+            dl_path = f"{target_dir}{os.path.sep}{filename}"
 
             # Find MD5 sum for file
             if not filename in md5:

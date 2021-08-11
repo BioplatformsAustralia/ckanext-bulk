@@ -214,7 +214,7 @@ def file_present(filename, description):
 %s not found"
 
 %s can not be accessed
-Please check tmp directory exists
+Please check directory and file exists
 """ % (
             filename,
             description,
@@ -223,6 +223,14 @@ Please check tmp directory exists
         sys.exit(1)
     logger.info("%s found" % (description,))
 
+def log_file_when_present(filename,description):
+    if not (os.path.isfile(filename) and os.access(filename, os.R_OK)):
+       return
+    logger.info("%s found" % (description,))
+    with open(filename, "r") as logfh:
+        for line in logfh.readlines():
+            logger.info(line.rstrip())
+    logger.info("END %s" % (description,))
 
 def main():
     global logger
@@ -237,6 +245,10 @@ def main():
     script_dir = os.path.dirname(os.path.abspath(__file__))
     url_list = f"{script_dir}{os.path.sep}tmp{os.path.sep}{bpa_dltool_slug}_urls.txt"
     md5_file = f"{script_dir}{os.path.sep}tmp{os.path.sep}{bpa_dltool_slug}_md5sum.txt"
+    query_file = f"{script_dir}{os.path.sep}QUERY.txt"
+
+    # Add QUERY.txt to debug output
+    log_file_when_present(query_file, "QUERY.txt")
 
     # Check we are being run from a suitable location
 

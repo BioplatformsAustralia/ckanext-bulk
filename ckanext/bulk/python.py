@@ -265,8 +265,13 @@ def main():
 
     with open(md5_file, "r") as md5fh:
         for line in md5fh.readlines():
-            (checksum, filename) = line.strip().split("  ", 1)
-            md5[filename] = checksum
+            try:
+                (checksum, filename) = line.strip().split("  ", 1)
+                md5[filename] = checksum
+            except ValueError as exception:
+                logger.error("Failed to parse MD5 line")
+                logger.error("Line     : %s" % (line,))
+                logger.error("Exception: %s" % (exception,))
 
     # Open list of URLs
 

@@ -233,8 +233,6 @@ def log_file_when_present(filename,description):
     logger.info("END %s" % (description,))
 
 def main():
-    global logger
-    logger = make_logger(__name__)
     logger.info(user_agent)
     logger.info("Download Tool slug: %s" % bpa_dltool_slug)
     logger.info("BPA Portal Username: %s" % bpa_username)
@@ -440,6 +438,8 @@ def process_downloads(api_key, url_list, md5_file, target_dir):
                 "%d corrupted files, re-run to attempt to fix" % (counts["invalid"],)
             )
 
+
+logger = make_logger(__name__)
 
 if __name__ == "__main__":
     # execute only if run as a script

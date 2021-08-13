@@ -223,6 +223,7 @@ Please check directory and file exists
         sys.exit(1)
     logger.info("%s found" % (description,))
 
+
 def log_file_when_present(filename,description):
     if not (os.path.isfile(filename) and os.access(filename, os.R_OK)):
        return
@@ -231,6 +232,7 @@ def log_file_when_present(filename,description):
         for line in logfh.readlines():
             logger.info(line.rstrip())
     logger.info("END %s" % (description,))
+
 
 def main():
     logger.info(user_agent)

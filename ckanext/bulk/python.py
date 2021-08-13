@@ -211,7 +211,7 @@ def file_present(filename, description):
     if not (os.path.isfile(filename) and os.access(filename, os.R_OK)):
         logger.error("%s not found or unreadable" % (filename,))
         error_message = """\
-%s not found"
+%s not found
 
 %s can not be accessed
 Please check directory and file exists

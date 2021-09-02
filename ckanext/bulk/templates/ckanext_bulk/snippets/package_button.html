@@ -1,5 +1,9 @@
 {% set url = h.url_for(controller='ckanext.bulk.controller:BulkPackageController', action='file_list', id=id) %}
+{% set bpa_ga_url = h.url_for(controller='ckanext.bpatogalaxy.controller:BpatogalaxyController', action='send_package_to_galaxy', id=id) %}
 {% if c.userobj %}
+<div>
+    <a title="Send Package to Galaxy." class="btn btn-primary" href="{{ bpa_ga_url }}"> {{ _('Send Package to Galaxy') }}</a>
+</div>
 <div class="bulkdl">
   <div class="bulkdl-btn">
    <a title="A zip archive will download. Extract it, and then follow the instructions in the README file to download this data in bulk." class="btn btn-default" href="{{ url }}" target="_blank"><i class="fa fa-download"></i> {{ _('Bulk download (metadata and data)') }}</a>

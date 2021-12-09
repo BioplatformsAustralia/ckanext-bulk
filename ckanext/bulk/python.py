@@ -18,7 +18,7 @@ bpa_dltool_slug = "{{ prefix }}"
 bpa_username = "{{ username }}"
 
 # Static constants
-user_agent = "data.bioplatforms.com download.py/0.3 (Contact help@bioplatforms.com)"
+user_agent = "data.bioplatforms.com download.py/0.4 (Contact help@bioplatforms.com)"
 
 # All imports should be from the base python
 import sys
@@ -296,6 +296,7 @@ def process_downloads(api_key, url_list, md5_file, target_dir):
     # For each URL
     with open(url_list, "r") as urlfh:
         for url in urlfh.readlines():
+            url = url.strip()
             filename = url.strip().split("/")[-1]
             dl_path = f"{target_dir}{os.path.sep}{filename}"
 

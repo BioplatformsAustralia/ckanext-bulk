@@ -58,6 +58,8 @@ if ! which md5sum >/dev/null 2>&1; then
   exit 1
 fi
 
+BPA_AGENT="data.bioplatforms.com download.sh/1.0"
+
 CURL=`which curl`
 
 # if on MacOS, favour homebrew curl over system curl
@@ -120,7 +122,7 @@ fi
 echo "Downloading data"
 while read URL; do
   echo "Downloading: $URL"
-  $CURL -O -L -C - -H "Authorization: $CKAN_API_KEY" "$URL"
+  $CURL -O -L -C - -A "$BPA_AGENT" -H "Authorization: $CKAN_API_KEY" "$URL"
   if [ $? -ne 0 ] ; then
      echo "Error downloading: $URL"
   fi

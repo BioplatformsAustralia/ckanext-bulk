@@ -3,6 +3,7 @@ import ckan.lib.helpers as h
 import sys
 import datetime
 import csv
+import bitmath
 from collections import defaultdict
 from StringIO import StringIO
 from pylons import config
@@ -21,8 +22,11 @@ CKAN Bulk Download
 
 {title} {prefix}
 
-Bulk download package generated:
-{timestamp}
+Bulk download package generated: {timestamp}
+Number of Packages             : {package_count}
+Number of Resources            : {resource_count}
+Total Space required           : {total_size}
+Total Size (bytes)             : {total_size_bytes}
 
 This archive contains the following files:
 
@@ -73,15 +77,19 @@ contents can be ignored.
 """
 
 QUERY_TEMPLATE = """\
-Title        : {title}
-Prefix       : {prefix}
-Timestamp    : {timestamp}
-User Page    : {user_page}
-Query        : {query}
-QueryURL     : {query_url}
-Download URL : {download_url}
-URL Count    : {url_count}
-MD5 Sum Count: {md5_count}
+Title         : {title}
+Prefix        : {prefix}
+Timestamp     : {timestamp}
+User Page     : {user_page}
+Query         : {query}
+QueryURL      : {query_url}
+Download URL  : {download_url}
+URL Count     : {url_count}
+MD5 Sum Count : {md5_count}
+Package Count : {package_count}
+Resource Count: {resource_count}
+Total Space   : {total_size}
+Total Bytes   : {total_size_bytes}
 """
 
 amd_data_types = ["base-genomics-amplicon", "base-genomics-amplicon-control", "base-metagenomics", "base-site-image",
@@ -93,6 +101,14 @@ amd_data_types = ["base-genomics-amplicon", "base-genomics-amplicon-control", "b
 mandatory_field_labels = ['Organization', 'Title', 'Description', 'URL', 'Tags', 'Geospatial Coverage', 'License',
                           'Resource Permissions']
 
+suffixes = ['B', 'KB', 'MB', 'GB', 'TB', 'PB']
+def humansize(nbytes):
+    i = 0
+    while nbytes >= 1024 and i < len(suffixes)-1:
+        nbytes /= 1024.
+        i += 1
+    f = ('%.2f' % nbytes).rstrip('0').rstrip('.')
+    return '%s %s' % (f, suffixes[i])
 
 def str_crlf(s):
     """
@@ -191,14 +207,22 @@ def generate_bulk_zip(
 
     urls = []
     md5sums = []
+    total_size_bytes = 0
+    resource_count = len(resources)
+    package_count = len(packages)
 
     md5_attribute = config.get("ckanext.bulk.md5_attribute", "md5")
     for resource in sorted(resources, key=lambda r: r["url"]):
         url = resource["url"]
         urls.append(resource["url"])
+        if "size" in resource:
+            if resource["size"]:
+                total_size_bytes = total_size_bytes + resource["size"]
+
         if md5_attribute in resource:
             filename = urlparse(url).path.split("/")[-1]
             md5sums.append((resource[md5_attribute], filename))
+
 
     response.headers["Content-Type"] = "application/zip"
     response.headers["Content-Disposition"] = str('attachment; filename="%s.zip"' % pfx)
@@ -208,7 +232,7 @@ def generate_bulk_zip(
         ip("README.txt"),
         str_crlf(
             BULK_EXPLANATORY_NOTE.format(
-                prefix=pfx, timestamp=get_timestamp(), title=title, user_page=user_page
+                prefix=pfx, timestamp=get_timestamp(), title=title, user_page=user_page, total_size=bitmath.Byte(bytes=total_size_bytes).best_prefix(), resource_count=resource_count, package_count=package_count, total_size_bytes=total_size_bytes
             )
         ),
     )
@@ -256,6 +280,10 @@ def generate_bulk_zip(
                 query=query,
                 query_url=query_url,
                 download_url=download_url,
+                package_count=package_count,
+                resource_count=resource_count,
+                total_size=bitmath.Byte(bytes=total_size_bytes).best_prefix(),
+                total_size_bytes=total_size_bytes
             )
         ),
     )

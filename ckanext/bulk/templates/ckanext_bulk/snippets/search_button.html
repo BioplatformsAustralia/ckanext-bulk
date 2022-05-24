@@ -1,9 +1,9 @@
 {% set url = h.add_url_param(controller='ckanext.bulk.controller:BulkSearchController', action='file_list', new_params=request.params) %}
 {% if c.userobj %}
 <div class="bulkdl">
-  <div class="bulkdl-btn">
+  <i class="bulkdl-btn">
       {% if result_size_bytes > size_warning_limit %}
-        <div class ="fa fa-exclamation-triangle alert-error"></div>
+        <i class ="fa fa-exclamation-triangle text-danger"></i>
       {% endif %}
    <a title="A zip archive will download. Extract it, and then follow the instructions in the README file to download this data in bulk." class="btn btn-default"
       {% if result_size_bytes > size_warning_limit %}

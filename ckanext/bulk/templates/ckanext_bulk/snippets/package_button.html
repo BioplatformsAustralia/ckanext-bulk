@@ -3,7 +3,7 @@
 <div class="bulkdl">
   <div class="bulkdl-btn">
       {% if result_size_bytes > size_warning_limit %}
-        <div class ="fa fa-exclamation-triangle alert-error"></div>
+        <div class ="fa fa-exclamation-triangle text-danger"></div>
       {% endif %}
    <a title="A zip archive will download. Extract it, and then follow the instructions in the README file to download this data in bulk." class="btn btn-default"
       {% if result_size_bytes > size_warning_limit %}

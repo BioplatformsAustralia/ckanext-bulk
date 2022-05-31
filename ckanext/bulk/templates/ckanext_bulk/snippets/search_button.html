@@ -1,7 +1,7 @@
 {% set url = h.add_url_param(controller='ckanext.bulk.controller:BulkSearchController', action='file_list', new_params=request.params) %}
 {% if c.userobj %}
 <div class="bulkdl">
-  <i class="bulkdl-btn">
+  <div class="bulkdl-btn">
       {% if result_size_bytes > size_warning_limit %}
         <i class ="fa fa-exclamation-triangle text-danger"></i>
       {% endif %}

@@ -23,6 +23,7 @@ CKAN Bulk Download
 {title} {prefix}
 
 Bulk download package generated: {timestamp}
+Number of Organizations        : {organization_count}
 Number of Packages             : {package_count}
 Number of Resources            : {resource_count}
 Total Space required           : {total_size}
@@ -58,6 +59,10 @@ export CKAN_API_KEY=xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx
 On Microsoft Windows, within Powershell, use:
 $env:CKAN_API_KEY="xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx"
 
+
+organization_metadata folder:
+Contains metadata spreadsheets for all organizations owning the selected data resources (files).
+
 package_metadata folder:
 Contains metadata spreadsheets for all selected data packages, grouped by
 the type of package (schema). Each data package will contain one or more
@@ -77,19 +82,20 @@ contents can be ignored.
 """
 
 QUERY_TEMPLATE = """\
-Title         : {title}
-Prefix        : {prefix}
-Timestamp     : {timestamp}
-User Page     : {user_page}
-Query         : {query}
-QueryURL      : {query_url}
-Download URL  : {download_url}
-URL Count     : {url_count}
-MD5 Sum Count : {md5_count}
-Package Count : {package_count}
-Resource Count: {resource_count}
-Total Space   : {total_size}
-Total Bytes   : {total_size_bytes}
+Title              : {title}
+Prefix             : {prefix}
+Timestamp          : {timestamp}
+User Page          : {user_page}
+Query              : {query}
+QueryURL           : {query_url}
+Download URL       : {download_url}
+URL Count          : {url_count}
+MD5 Sum Count      : {md5_count}
+Organization Count : {organization_count}
+Package Count      : {package_count}
+Resource Count     : {resource_count}
+Total Space        : {total_size}
+Total Bytes        : {total_size_bytes}
 """
 
 amd_data_types = ["base-genomics-amplicon", "base-genomics-amplicon-control", "base-metagenomics", "base-site-image",
@@ -134,6 +140,29 @@ def choose_header_label(typ, schema_key, field):
     else:
         return field_label
 
+def org_with_extras_to_csv(org):
+    # Note: as we're in Python 2, we have to do a bit of a dance here with unicode --
+    # we must make sure everything we put into the writer has been encoded
+    fd = StringIO()
+    w = csv.writer(fd)
+    header = []
+    field_names = ["key", "value"]
+    header.append("Field")
+    header.append("Value")
+    w.writerow(header)
+
+    w.writerow(
+        ["name", encode_field(org["name"])]
+    )
+    w.writerow(
+        ["display_name", encode_field(org["display_name"])]
+    )
+    for extra in org["extras"]:
+        if extra["state"] == 'active' or extra["state"] is None:
+            w.writerow(
+            [encode_field(extra.get(field_name, "")) for field_name in field_names]
+        )
+    return fd.getvalue()
 
 def schema_to_csv(typ, schema_key, objects):
     # Note: as we're in Python 2, we have to do a bit of a dance here with unicode --
@@ -165,7 +194,7 @@ def encode_field(field_name):
 
 
 def generate_bulk_zip(
-        pfx, title, user, packages, resources, query=None, query_url=None, download_url=None
+        pfx, title, user, organizations, packages, resources, query=None, query_url=None, download_url=None
 ):
     user_page = None
     username = ""
@@ -179,6 +208,7 @@ def generate_bulk_zip(
 
     def ip(s):
         return pfx + "/" + s
+
 
     def write_script(filename, contents):
         info = ZipInfo(ip(filename))
@@ -196,11 +226,13 @@ def generate_bulk_zip(
         )
         zf.writestr(info, contents.encode("utf-8"))
 
+
     urls = []
     md5sums = []
     total_size_bytes = 0
     resource_count = len(resources)
     package_count = len(packages)
+    organization_count = len(organizations)
 
     md5_attribute = config.get("ckanext.bulk.md5_attribute", "md5")
     for resource in sorted(resources, key=lambda r: r["url"]):
@@ -223,7 +255,7 @@ def generate_bulk_zip(
         ip("README.txt"),
         str_crlf(
             BULK_EXPLANATORY_NOTE.format(
-                prefix=pfx, timestamp=get_timestamp(), title=title, user_page=user_page, total_size=bitmath.Byte(bytes=total_size_bytes).best_prefix(), resource_count=resource_count, package_count=package_count, total_size_bytes=total_size_bytes
+                prefix=pfx, timestamp=get_timestamp(), title=title, user_page=user_page, total_size=bitmath.Byte(bytes=total_size_bytes).best_prefix(), organization_count=organization_count, resource_count=resource_count, package_count=package_count, total_size_bytes=total_size_bytes
             )
         ),
     )
@@ -233,6 +265,12 @@ def generate_bulk_zip(
 
     zf.writestr(ip(urls_fname), u"\n".join(urls) + u"\n")
     zf.writestr(ip(md5sum_fname), u"\n".join("%s  %s" % t for t in md5sums) + u"\n")
+
+    for org in organizations:
+            zf.writestr(
+            ip("organization_metadata/organization_metadata_{}.csv".format(org["name"])),
+                org_with_extras_to_csv(org),
+          )
 
     for typ, typ_packages in objects_by_attr(packages, "type", "unknown").items():
         # some objects may not have a ckanext-scheming schema
@@ -271,6 +309,7 @@ def generate_bulk_zip(
                 query=query,
                 query_url=query_url,
                 download_url=download_url,
+                organization_count=organization_count,
                 package_count=package_count,
                 resource_count=resource_count,
                 total_size=bitmath.Byte(bytes=total_size_bytes).best_prefix(),

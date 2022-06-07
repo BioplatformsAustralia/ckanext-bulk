@@ -74,6 +74,7 @@ class BulkOrganizationController(OrganizationController):
             "user": c.user,
             "schema": self._db_to_form_schema(group_type=group_type),
             "for_view": True,
+            'extras_as_string': True
         }
         data_dict = {"id": id, "type": group_type}
 
@@ -101,7 +102,7 @@ class BulkOrganizationController(OrganizationController):
         resources = list(_resources())
 
         site_url = config.get("ckan.site_url").rstrip("/")
-	query = request.params.get(u'q', u'')
+        query = request.params.get(u'q', u'')
         query_url = "%s%s" % (
             site_url,
             h.add_url_param(
@@ -125,6 +126,7 @@ class BulkOrganizationController(OrganizationController):
             query_to_zip_prefix(request, name),
             "Search of organization: {}".format(name),
             c.userobj,
+            [c.group_dict],
             packages,
             resources,
             query,
@@ -159,9 +161,9 @@ class BulkSearchController(BaseController):
         fq = ""
         for (param, value) in request.params.items():
             if (
-                param not in ["q", "page", "sort"]
-                and len(value)
-                and not param.startswith("_")
+                    param not in ["q", "page", "sort"]
+                    and len(value)
+                    and not param.startswith("_")
             ):
                 if not param.startswith("ext_"):
                     c.fields.append((param, value))
@@ -179,6 +181,7 @@ class BulkSearchController(BaseController):
             "user": c.user,
             "for_view": True,
             "auth_user_obj": c.userobj,
+            'extras_as_string': True,
         }
 
         facets = OrderedDict()
@@ -205,6 +208,33 @@ class BulkSearchController(BaseController):
         packages = [t for t in results]
         resources = list(_resources())
 
+        def _organizations():
+            orgs = {}
+            orgs_with_extras = []
+
+            # get unique orgs by name
+            for package in results:
+                orgs[package["organization"]["name"]] = package["organization"]["id"]
+
+            for org in orgs.items():
+                name = org[0]
+                org_dict = {"id": org[1]}
+
+                try:
+                    # Do not query for the group datasets when dictizing, as they will
+                    # be ignored and get requested on the controller anyway
+                    org_dict["include_datasets"] = False
+                    found_org_dict = get_action("organization_show")(context, org_dict)
+
+                except (NotFound, NotAuthorized):
+                    abort(404, _("Organization not found"))
+
+                orgs_with_extras.append(found_org_dict)
+
+            return orgs_with_extras
+
+        organizations = _organizations()
+
         site_url = config.get("ckan.site_url").rstrip("/")
         query_url = "%s%s" % (
             site_url,
@@ -227,9 +257,10 @@ class BulkSearchController(BaseController):
             query_to_zip_prefix(request),
             "Search of all datasets",
             c.userobj,
+            organizations,
             packages,
             resources,
-	    q,
+            q,
             query_url,
             download_url,
         )
@@ -261,7 +292,7 @@ class BulkPackageController(BaseController):
         name = pkg_dict["name"]
 
         site_url = config.get("ckan.site_url").rstrip("/")
-	query = "id:%s" % (name,)
+        query = "id:%s" % (name,)
         query_url = "%s%s" % (
             site_url,
             h.url_for(controller="package", action="read", id=name),
@@ -271,10 +302,20 @@ class BulkPackageController(BaseController):
             h.url_for(controller=self.controller, action="file_list", id=id),
         )
 
+        org_dict = {"id": pkg_dict["organization"]["id"]}
+        try:
+            # Do not query for the group datasets when dictizing, as they will
+            # be ignored and get requested on the controller anyway
+            org_dict["include_datasets"] = False
+            found_org_dict = get_action("organization_show")(context, org_dict)
+        except (NotFound, NotAuthorized):
+            abort(404, _("Organization not found"))
+
         return generate_bulk_zip(
             dataset_to_zip_prefix(id),
             "Dataset: %s" % (name,),
             c.userobj,
+            [found_org_dict,],
             [pkg_dict],
             pkg_dict["resources"],
             query,

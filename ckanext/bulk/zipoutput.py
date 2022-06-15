@@ -2,6 +2,7 @@ import jinja2
 import ckan.lib.helpers as h
 import sys
 import datetime
+import codecs
 import csv
 import bitmath
 from collections import defaultdict
@@ -61,16 +62,17 @@ $env:CKAN_API_KEY="xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx"
 
 
 organization_metadata folder:
-Contains metadata spreadsheets for all organizations owning the selected data resources (files).
+Contains metadata spreadsheets as CSV for all organizations owning the
+selected data resources (files).
 
 package_metadata folder:
-Contains metadata spreadsheets for all selected data packages, grouped by
-the type of package (schema). Each data package will contain one or more
+Contains metadata spreadsheets as CSV for all selected data packages, grouped
+by the type of package (schema). Each data package will contain one or more
 resources. This metadata is an amalgamation of all metadata, including
 sample contextual metadata and processing metadata.
 
 resource_metadata folder:
-Contains metadata spreadsheets for all selected data resources (files).
+Contains metadata spreadsheets as CSV for all selected data resources (files).
 
 QUERY.txt:
 Text file which contains metadata about the download results and the original
@@ -79,6 +81,10 @@ query
 tmp folder:
 This folder contains files required by the download scripts. Its
 contents can be ignored.
+
+
+Note all CSV files are encoded as UTF-8 with a Byte Order Mark (BOM) to
+enable character set detection by recent versions of Microsoft Excel.
 """
 
 QUERY_TEMPLATE = """\
@@ -144,6 +150,10 @@ def org_with_extras_to_csv(org):
     # Note: as we're in Python 2, we have to do a bit of a dance here with unicode --
     # we must make sure everything we put into the writer has been encoded
     fd = StringIO()
+
+    # Write the Byte Order Mark to signal to Excel that this CSV is in UTF-8
+    fd.write(codecs.BOM_UTF8)
+
     w = csv.writer(fd)
     header = []
     field_names = ["key", "value"]
@@ -172,6 +182,10 @@ def schema_to_csv(typ, schema_key, objects):
         # some objects may not have a ckanext-scheming schema
         return ""
     fd = StringIO()
+
+    # Write the Byte Order Mark to signal to Excel that this CSV is in UTF-8
+    fd.write(codecs.BOM_UTF8)
+
     w = csv.writer(fd)
     header = []
     field_names = []

@@ -74,7 +74,7 @@ class BulkOrganizationController(OrganizationController):
             "user": c.user,
             "schema": self._db_to_form_schema(group_type=group_type),
             "for_view": True,
-            'extras_as_string': True
+            "extras_as_string": True,
         }
         data_dict = {"id": id, "type": group_type}
 
@@ -102,7 +102,7 @@ class BulkOrganizationController(OrganizationController):
         resources = list(_resources())
 
         site_url = config.get("ckan.site_url").rstrip("/")
-        query = request.params.get(u'q', u'')
+        query = request.params.get(u"q", u"")
         query_url = "%s%s" % (
             site_url,
             h.add_url_param(
@@ -161,9 +161,9 @@ class BulkSearchController(BaseController):
         fq = ""
         for (param, value) in request.params.items():
             if (
-                    param not in ["q", "page", "sort"]
-                    and len(value)
-                    and not param.startswith("_")
+                param not in ["q", "page", "sort"]
+                and len(value)
+                and not param.startswith("_")
             ):
                 if not param.startswith("ext_"):
                     c.fields.append((param, value))
@@ -181,7 +181,7 @@ class BulkSearchController(BaseController):
             "user": c.user,
             "for_view": True,
             "auth_user_obj": c.userobj,
-            'extras_as_string': True,
+            "extras_as_string": True,
         }
 
         facets = OrderedDict()
@@ -315,7 +315,9 @@ class BulkPackageController(BaseController):
             dataset_to_zip_prefix(id),
             "Dataset: %s" % (name,),
             c.userobj,
-            [found_org_dict,],
+            [
+                found_org_dict,
+            ],
             [pkg_dict],
             pkg_dict["resources"],
             query,

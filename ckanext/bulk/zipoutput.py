@@ -104,14 +104,33 @@ Total Space        : {total_size}
 Total Bytes        : {total_size_bytes}
 """
 
-amd_data_types = ["base-genomics-amplicon", "base-genomics-amplicon-control", "base-metagenomics", "base-site-image",
-                  "mm-genomics-amplicon", "mm-genomics-amplicon-control", "mm-metagenomics", "mm-metatranscriptome",
-                  "amdb-metagenomics-novaseq", "amdb-metagenomics-novaseq-control", "amdb-genomics-amplicon",
-                  "amdb-genomics-amplicon-control"]
+amd_data_types = [
+    "base-genomics-amplicon",
+    "base-genomics-amplicon-control",
+    "base-metagenomics",
+    "base-site-image",
+    "mm-genomics-amplicon",
+    "mm-genomics-amplicon-control",
+    "mm-metagenomics",
+    "mm-metatranscriptome",
+    "amdb-metagenomics-novaseq",
+    "amdb-metagenomics-novaseq-control",
+    "amdb-genomics-amplicon",
+    "amdb-genomics-amplicon-control",
+]
 
 # these are labels that should always be included over their corresponding 'less descriptive' field_name
-mandatory_field_labels = ['Organization', 'Title', 'Description', 'URL', 'Tags', 'Geospatial Coverage', 'License',
-                          'Resource Permissions']
+mandatory_field_labels = [
+    "Organization",
+    "Title",
+    "Description",
+    "URL",
+    "Tags",
+    "Geospatial Coverage",
+    "License",
+    "Resource Permissions",
+]
+
 
 def str_crlf(s):
     """
@@ -141,10 +160,15 @@ def debug(s):
 
 def choose_header_label(typ, schema_key, field):
     field_label = field["label"].encode("utf8")
-    if schema_key == "dataset_fields" and typ in amd_data_types and field_label not in mandatory_field_labels:
+    if (
+        schema_key == "dataset_fields"
+        and typ in amd_data_types
+        and field_label not in mandatory_field_labels
+    ):
         return field["field_name"]
     else:
         return field_label
+
 
 def org_with_extras_to_csv(org):
     # Note: as we're in Python 2, we have to do a bit of a dance here with unicode --
@@ -161,18 +185,15 @@ def org_with_extras_to_csv(org):
     header.append("Value")
     w.writerow(header)
 
-    w.writerow(
-        ["name", encode_field(org["name"])]
-    )
-    w.writerow(
-        ["display_name", encode_field(org["display_name"])]
-    )
+    w.writerow(["name", encode_field(org["name"])])
+    w.writerow(["display_name", encode_field(org["display_name"])])
     for extra in org["extras"]:
-        if extra["state"] == 'active' or extra["state"] is None:
+        if extra["state"] == "active" or extra["state"] is None:
             w.writerow(
-            [encode_field(extra.get(field_name, "")) for field_name in field_names]
-        )
+                [encode_field(extra.get(field_name, "")) for field_name in field_names]
+            )
     return fd.getvalue()
+
 
 def schema_to_csv(typ, schema_key, objects):
     # Note: as we're in Python 2, we have to do a bit of a dance here with unicode --
@@ -208,7 +229,15 @@ def encode_field(field_name):
 
 
 def generate_bulk_zip(
-        pfx, title, user, organizations, packages, resources, query=None, query_url=None, download_url=None
+    pfx,
+    title,
+    user,
+    organizations,
+    packages,
+    resources,
+    query=None,
+    query_url=None,
+    download_url=None,
 ):
     user_page = None
     username = ""
@@ -218,11 +247,10 @@ def generate_bulk_zip(
             site_url,
             h.url_for(controller="user", action="read", id=user.name),
         )
-	username = user.name
+        username = user.name
 
     def ip(s):
         return pfx + "/" + s
-
 
     def write_script(filename, contents):
         info = ZipInfo(ip(filename))
@@ -239,7 +267,6 @@ def generate_bulk_zip(
             )
         )
         zf.writestr(info, contents.encode("utf-8"))
-
 
     urls = []
     md5sums = []
@@ -260,7 +287,6 @@ def generate_bulk_zip(
             filename = urlparse(url).path.split("/")[-1]
             md5sums.append((resource[md5_attribute], filename))
 
-
     response.headers["Content-Type"] = "application/zip"
     response.headers["Content-Disposition"] = str('attachment; filename="%s.zip"' % pfx)
     fd = BytesIO()
@@ -269,7 +295,15 @@ def generate_bulk_zip(
         ip("README.txt"),
         str_crlf(
             BULK_EXPLANATORY_NOTE.format(
-                prefix=pfx, timestamp=get_timestamp(), title=title, user_page=user_page, total_size=bitmath.Byte(bytes=total_size_bytes).best_prefix(), organization_count=organization_count, resource_count=resource_count, package_count=package_count, total_size_bytes=total_size_bytes
+                prefix=pfx,
+                timestamp=get_timestamp(),
+                title=title,
+                user_page=user_page,
+                total_size=bitmath.Byte(bytes=total_size_bytes).best_prefix(),
+                organization_count=organization_count,
+                resource_count=resource_count,
+                package_count=package_count,
+                total_size_bytes=total_size_bytes,
             )
         ),
     )
@@ -281,10 +315,12 @@ def generate_bulk_zip(
     zf.writestr(ip(md5sum_fname), u"\n".join("%s  %s" % t for t in md5sums) + u"\n")
 
     for org in organizations:
-            zf.writestr(
-            ip("organization_metadata/organization_metadata_{}.csv".format(org["name"])),
-                org_with_extras_to_csv(org),
-          )
+        zf.writestr(
+            ip(
+                "organization_metadata/organization_metadata_{}.csv".format(org["name"])
+            ),
+            org_with_extras_to_csv(org),
+        )
 
     for typ, typ_packages in objects_by_attr(packages, "type", "unknown").items():
         # some objects may not have a ckanext-scheming schema
@@ -296,7 +332,7 @@ def generate_bulk_zip(
         )
 
     for typ, typ_resources in objects_by_attr(
-            resources, "resource_type", "unknown"
+        resources, "resource_type", "unknown"
     ).items():
         # some objects may not have a ckanext-scheming schema
         if typ is None:
@@ -327,7 +363,7 @@ def generate_bulk_zip(
                 package_count=package_count,
                 resource_count=resource_count,
                 total_size=bitmath.Byte(bytes=total_size_bytes).best_prefix(),
-                total_size_bytes=total_size_bytes
+                total_size_bytes=total_size_bytes,
             )
         ),
     )

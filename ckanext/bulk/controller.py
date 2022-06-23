@@ -5,7 +5,7 @@ import datetime
 import string
 import hashlib
 from ckan.common import request, c
-from pylons import config
+from ckan.plugins.toolkit import config
 from ckan import model
 from ckan.lib.base import abort, BaseController
 from ckan.controllers.organization import OrganizationController

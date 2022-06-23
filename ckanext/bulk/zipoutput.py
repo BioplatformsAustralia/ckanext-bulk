@@ -7,7 +7,7 @@ import csv
 import bitmath
 from collections import defaultdict
 from StringIO import StringIO
-from pylons import config
+from ckan.plugins.toolkit import config
 from urlparse import urlparse
 from zipfile import ZipFile, ZipInfo, ZIP_DEFLATED
 from ckan.common import response

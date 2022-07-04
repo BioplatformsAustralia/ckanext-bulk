@@ -6,9 +6,9 @@ import codecs
 import csv
 import bitmath
 from collections import defaultdict
-from StringIO import StringIO
+from io import StringIO
 from ckan.plugins.toolkit import config
-from urlparse import urlparse
+from urllib.parse import urlparse
 from zipfile import ZipFile, ZipInfo, ZIP_DEFLATED
 from ckan.common import response
 from io import BytesIO
@@ -223,7 +223,7 @@ def schema_to_csv(typ, schema_key, objects):
 
 def encode_field(field_name):
     # fix for AttributeError: 'int' object has no attribute 'encode'
-    if isinstance(field_name, (int, long, float)):
+    if isinstance(field_name, (int, float)):
         field_name = str(field_name)
     return field_name.encode("utf8")
 
@@ -254,7 +254,7 @@ def generate_bulk_zip(
 
     def write_script(filename, contents):
         info = ZipInfo(ip(filename))
-        info.external_attr = 0755 << 16L  # mark script as executable
+        info.external_attr = 0o755 << 16  # mark script as executable
         contents = (
             jinja2.Environment()
             .from_string(contents)
@@ -311,8 +311,8 @@ def generate_bulk_zip(
     urls_fname = "tmp/{}_urls.txt".format(pfx)
     md5sum_fname = "tmp/{}_md5sum.txt".format(pfx)
 
-    zf.writestr(ip(urls_fname), u"\n".join(urls) + u"\n")
-    zf.writestr(ip(md5sum_fname), u"\n".join("%s  %s" % t for t in md5sums) + u"\n")
+    zf.writestr(ip(urls_fname), "\n".join(urls) + "\n")
+    zf.writestr(ip(md5sum_fname), "\n".join("%s  %s" % t for t in md5sums) + "\n")
 
     for org in organizations:
         zf.writestr(
@@ -322,7 +322,7 @@ def generate_bulk_zip(
             org_with_extras_to_csv(org),
         )
 
-    for typ, typ_packages in objects_by_attr(packages, "type", "unknown").items():
+    for typ, typ_packages in list(objects_by_attr(packages, "type", "unknown").items()):
         # some objects may not have a ckanext-scheming schema
         if typ is None:
             continue
@@ -331,9 +331,9 @@ def generate_bulk_zip(
             schema_to_csv(typ, "dataset_fields", typ_packages),
         )
 
-    for typ, typ_resources in objects_by_attr(
+    for typ, typ_resources in list(objects_by_attr(
         resources, "resource_type", "unknown"
-    ).items():
+    ).items()):
         # some objects may not have a ckanext-scheming schema
         if typ is None:
             continue

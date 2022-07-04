@@ -149,7 +149,7 @@ def package_search_list():
     c.fields_grouped = {}
     search_extras = {}
     fq = ""
-    for (param, value) in request.params.items():
+    for (param, value) in list(request.params.items()):
         if (
             param not in ["q", "page", "sort"]
             and len(value)
@@ -179,7 +179,7 @@ def package_search_list():
     data_dict = {
         "q": q,
         "fq": fq.strip(),
-        "facet.field": facets.keys(),
+        "facet.field": list(facets.keys()),
         "rows": limit,
         "extras": search_extras,
         "include_private": p.toolkit.asbool(
@@ -206,7 +206,7 @@ def package_search_list():
         for package in results:
             orgs[package["organization"]["name"]] = package["organization"]["id"]
 
-        for org in orgs.items():
+        for org in list(orgs.items()):
             name = org[0]
             org_dict = {"id": org[1]}
 

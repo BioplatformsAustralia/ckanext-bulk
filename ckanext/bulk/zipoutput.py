@@ -245,7 +245,7 @@ def generate_bulk_zip(
     if user:
         user_page = "%s%s" % (
             site_url,
-            h.url_for(controller="user", action="read", id=user.name),
+            h.url_for("user.read", id=user.name),
         )
         username = user.name
 

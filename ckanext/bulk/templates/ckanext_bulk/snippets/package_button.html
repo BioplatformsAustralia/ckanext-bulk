@@ -1,4 +1,4 @@
-{% set url = h.url_for(controller='ckanext.bulk.controller:BulkPackageController', action='file_list', id=id) %}
+{% set url = h.url_for('bulk.package_file_list', id=id) %}
 {% if c.userobj %}
 <div class="bulkdl">
   <div class="bulkdl-btn">

@@ -1,4 +1,4 @@
-{% set url = h.add_url_param(controller='ckanext.bulk.controller:BulkOrganizationController', action='file_list', extras={'id': id}, new_params=request.params) %}
+{% set url = h.add_url_param('bulk.organization_file_list', extras={'id': id}, new_params=request.params) %}
 {% if c.userobj %}
 <div class="bulkdl">
   <div class="bulkdl-btn">

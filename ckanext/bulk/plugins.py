@@ -1,5 +1,7 @@
 import logging
-from ckan.plugins import toolkit, IConfigurer, IRoutes, SingletonPlugin, implements
+from ckan.plugins import toolkit, IConfigurer, IBlueprint, SingletonPlugin, implements
+
+from ckanext.bulk import blueprint
 
 
 log = logging.getLogger(__name__)
@@ -7,32 +9,13 @@ log = logging.getLogger(__name__)
 
 class BulkPlugin(SingletonPlugin):
     implements(IConfigurer)
-    implements(IRoutes, inherit=True)
+    implements(IBlueprint)
 
-    def after_map(self, map):
-        org_controller = "ckanext.bulk.controller:BulkOrganizationController"
-        map.connect(
-            "bulk_organization_file_list",
-            "/bulk/organization/{id}/file_list",
-            action="file_list",
-            controller=org_controller,
-        )
-        search_controller = "ckanext.bulk.controller:BulkSearchController"
-        map.connect(
-            "bulk_package_search_list",
-            "/bulk/dataset/file_list",
-            action="file_list",
-            controller=search_controller,
-        )
-        pkg_controller = "ckanext.bulk.controller:BulkPackageController"
-        map.connect(
-            "bulk_package_file_list",
-            "/bulk/dataset/{id}/file_list",
-            action="file_list",
-            controller=pkg_controller,
-        )
-        return map
-
+    # IConfigurer
     def update_config(self, config):
         toolkit.add_template_directory(config, "templates")
         toolkit.add_public_directory(config, "static")
+
+    # IBlueprint
+    def get_blueprint(self):
+        return blueprint.bulk

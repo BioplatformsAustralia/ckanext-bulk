@@ -10,7 +10,7 @@ from io import StringIO
 from ckan.plugins.toolkit import config
 from urllib.parse import urlparse
 from zipfile import ZipFile, ZipInfo, ZIP_DEFLATED
-from ckan.common import response
+from flask import make_response
 from io import BytesIO
 from .bash import SH_TEMPLATE
 from .powershell import POWERSHELL_TEMPLATE
@@ -287,8 +287,11 @@ def generate_bulk_zip(
             filename = urlparse(url).path.split("/")[-1]
             md5sums.append((resource[md5_attribute], filename))
 
-    response.headers["Content-Type"] = "application/zip"
-    response.headers["Content-Disposition"] = str('attachment; filename="%s.zip"' % pfx)
+    headers = {
+        "Content-Type": "application/zip",
+        "Content-Disposition": str('attachment; filename="%s.zip"' % pfx),
+    }
+
     fd = BytesIO()
     zf = ZipFile(fd, mode="w", compression=ZIP_DEFLATED)
     zf.writestr(
@@ -369,4 +372,5 @@ def generate_bulk_zip(
     )
 
     zf.close()
-    return fd.getvalue()
+    content = fd.getvalue()
+    return make_response((content, 200, headers))

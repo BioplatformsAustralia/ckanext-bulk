@@ -8,8 +8,7 @@ from flask import Blueprint
 from ckan.common import request, c
 from ckan.plugins.toolkit import config
 from ckan import model
-from ckan.lib.base import abort, BaseController
-from ckan.controllers.organization import OrganizationController
+from ckan.lib.base import abort
 from ckan.logic import NotFound, NotAuthorized, get_action, check_access
 from ckan.views.group import _db_to_form_schema, _action, _read, _guess_group_type
 from collections import OrderedDict

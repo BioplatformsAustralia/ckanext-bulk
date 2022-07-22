@@ -1,4 +1,4 @@
-{% set url = h.add_url_param('package_search_list', new_params=request.params) %}
+{% set url = h.add_url_param(h.url_for('bulk.package_search_list'), new_params=request.params) %}
 {% if c.userobj %}
 <div class="bulkdl">
   <div class="bulkdl-btn">

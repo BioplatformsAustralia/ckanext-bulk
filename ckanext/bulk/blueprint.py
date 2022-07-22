@@ -102,17 +102,14 @@ def organization_file_list(id):
     query_url = "%s%s" % (
         site_url,
         h.add_url_param(
-            controller="organization",
-            action="read",
-            extras={"id": id},
+            h.url_for("organization.read", id=id),
             new_params=request.params,
         ),
     )
     download_url = "%s%s" % (
         site_url,
         h.add_url_param(
-            "bulk.organization_file_list",
-            extras={"id": id},
+            h.url_for("bulk.organization_file_list", id=id),
             new_params=request.params,
         ),
     )
@@ -228,14 +225,14 @@ def package_search_list():
     query_url = "%s%s" % (
         site_url,
         h.add_url_param(
-            controller="package.search",
+            h.url_for("dataset.search"),
             new_params=request.params,
         ),
     )
     download_url = "%s%s" % (
         site_url,
         h.add_url_param(
-            "bulk.package_search_list",
+            h.url_for("bulk.package_search_list"),
             new_params=request.params,
         ),
     )
@@ -277,7 +274,7 @@ def package_file_list(id):
     query = "id:%s" % (name,)
     query_url = "%s%s" % (
         site_url,
-        h.url_for("package.read", id=name),
+        h.url_for("dataset.read", id=name),
     )
     download_url = "%s%s" % (
         site_url,

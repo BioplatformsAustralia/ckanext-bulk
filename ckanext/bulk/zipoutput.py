@@ -6,12 +6,11 @@ import codecs
 import csv
 import bitmath
 from collections import defaultdict
-from io import StringIO
 from ckan.plugins.toolkit import config
 from urllib.parse import urlparse
 from zipfile import ZipFile, ZipInfo, ZIP_DEFLATED
 from flask import make_response
-from io import BytesIO
+from io import BytesIO, TextIOWrapper
 from .bash import SH_TEMPLATE
 from .powershell import POWERSHELL_TEMPLATE
 from .python import PY_TEMPLATE
@@ -171,14 +170,18 @@ def choose_header_label(typ, schema_key, field):
 
 
 def org_with_extras_to_csv(org):
-    # Note: as we're in Python 2, we have to do a bit of a dance here with unicode --
     # we must make sure everything we put into the writer has been encoded
-    fd = StringIO()
+    fd = BytesIO()
 
     # Write the Byte Order Mark to signal to Excel that this CSV is in UTF-8
     fd.write(codecs.BOM_UTF8)
 
-    w = csv.writer(fd)
+    if sys.version_info >= (3, 0):
+        t = TextIOWrapper(fd, write_through = True, encoding='utf-8')
+        w = csv.writer(t)
+    else:
+        w = csv.writer(fd)
+
     header = []
     field_names = ["key", "value"]
     header.append("Field")
@@ -196,18 +199,22 @@ def org_with_extras_to_csv(org):
 
 
 def schema_to_csv(typ, schema_key, objects):
-    # Note: as we're in Python 2, we have to do a bit of a dance here with unicode --
     # we must make sure everything we put into the writer has been encoded
     schema = scheming_get_dataset_schema(typ)
     if schema is None:
         # some objects may not have a ckanext-scheming schema
         return ""
-    fd = StringIO()
+    fd = BytesIO()
 
     # Write the Byte Order Mark to signal to Excel that this CSV is in UTF-8
     fd.write(codecs.BOM_UTF8)
 
-    w = csv.writer(fd)
+    if sys.version_info >= (3, 0):
+        t = TextIOWrapper(fd, write_through = True, encoding='utf-8')
+        w = csv.writer(t)
+    else:
+        w = csv.writer(fd)
+
     header = []
     field_names = []
     for field in schema[schema_key]:
@@ -225,7 +232,10 @@ def encode_field(field_name):
     # fix for AttributeError: 'int' object has no attribute 'encode'
     if isinstance(field_name, (int, float)):
         field_name = str(field_name)
-    return field_name.encode("utf8")
+    if sys.version_info >= (3, 0) and isinstance(field_name, str):
+        return field_name
+    else:
+        return field_name.encode("utf8")
 
 
 def generate_bulk_zip(

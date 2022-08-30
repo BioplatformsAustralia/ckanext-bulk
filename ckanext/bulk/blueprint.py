@@ -306,7 +306,15 @@ def package_file_list(id):
 
 
 bulk.add_url_rule(
-    u"/bulk/organization/<id>/file_list", view_func=organization_file_list
+    u"/bulk/organization/<id>/file_list",
+    view_func=organization_file_list,
+    methods=[u"GET", u"POST"],
 )
-bulk.add_url_rule(u"/bulk/dataset/<id>/file_list", view_func=package_file_list)
-bulk.add_url_rule(u"/bulk/dataset/file_list", view_func=package_search_list)
+bulk.add_url_rule(
+    u"/bulk/dataset/<id>/file_list",
+    view_func=package_file_list,
+    methods=[u"GET", u"POST"],
+)
+bulk.add_url_rule(
+    u"/bulk/dataset/file_list", view_func=package_search_list, methods=[u"GET", u"POST"]
+)

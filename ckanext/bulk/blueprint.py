@@ -102,15 +102,13 @@ def organization_file_list(id):
     query_url = "%s%s" % (
         site_url,
         h.add_url_param(
-            h.url_for("organization.read", id=id),
-            new_params=request.params,
+            h.url_for("organization.read", id=id), new_params=request.params
         ),
     )
     download_url = "%s%s" % (
         site_url,
         h.add_url_param(
-            h.url_for("bulk.organization_file_list", id=id),
-            new_params=request.params,
+            h.url_for("bulk.organization_file_list", id=id), new_params=request.params
         ),
     )
 
@@ -224,16 +222,12 @@ def package_search_list():
     site_url = config.get("ckan.site_url").rstrip("/")
     query_url = "%s%s" % (
         site_url,
-        h.add_url_param(
-            h.url_for("dataset.search"),
-            new_params=request.params,
-        ),
+        h.add_url_param(h.url_for("dataset.search"), new_params=request.params),
     )
     download_url = "%s%s" % (
         site_url,
         h.add_url_param(
-            h.url_for("bulk.package_search_list"),
-            new_params=request.params,
+            h.url_for("bulk.package_search_list"), new_params=request.params
         ),
     )
 
@@ -272,14 +266,8 @@ def package_file_list(id):
 
     site_url = config.get("ckan.site_url").rstrip("/")
     query = "id:%s" % (name,)
-    query_url = "%s%s" % (
-        site_url,
-        h.url_for("dataset.read", id=name),
-    )
-    download_url = "%s%s" % (
-        site_url,
-        h.url_for("bulk.package_file_list", id=id),
-    )
+    query_url = "%s%s" % (site_url, h.url_for("dataset.read", id=name))
+    download_url = "%s%s" % (site_url, h.url_for("bulk.package_file_list", id=id))
 
     org_dict = {"id": pkg_dict["organization"]["id"]}
     try:
@@ -294,9 +282,7 @@ def package_file_list(id):
         dataset_to_zip_prefix(id),
         "Dataset: %s" % (name,),
         c.userobj,
-        [
-            found_org_dict,
-        ],
+        [found_org_dict],
         [pkg_dict],
         pkg_dict["resources"],
         query,

@@ -312,7 +312,7 @@ def generate_bulk_zip(
                 timestamp=get_timestamp(),
                 title=title,
                 user_page=user_page,
-                total_size=bitmath.Byte(bytes=total_size_bytes).best_prefix(),
+                total_size=bitmath.Byte(bytes=total_size_bytes).best_prefix().format("{value:.2f} {unit}"),
                 organization_count=organization_count,
                 resource_count=resource_count,
                 package_count=package_count,
@@ -375,7 +375,7 @@ def generate_bulk_zip(
                 organization_count=organization_count,
                 package_count=package_count,
                 resource_count=resource_count,
-                total_size=bitmath.Byte(bytes=total_size_bytes).best_prefix(),
+                total_size=bitmath.Byte(bytes=total_size_bytes).best_prefix().format("{value:.2f} {unit}"),
                 total_size_bytes=total_size_bytes,
             )
         ),

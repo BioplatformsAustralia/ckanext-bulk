@@ -219,7 +219,7 @@ def schema_to_csv(typ, schema_key, objects):
     field_names = []
     for field in schema[schema_key]:
         field_names.append(field["field_name"])
-        header.append(choose_header_label(typ, schema_key, field))
+        header.append(encode_field(choose_header_label(typ, schema_key, field)))
     w.writerow(header)
     for obj in sorted(objects, key=lambda p: p["name"]):
         w.writerow(
@@ -235,7 +235,7 @@ def encode_field(field_name):
     if sys.version_info >= (3, 0) and isinstance(field_name, str):
         return field_name
     else:
-        return field_name.encode("utf8")
+        return field_name.decode("utf8")
 
 
 def generate_bulk_zip(

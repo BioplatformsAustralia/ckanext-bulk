@@ -136,12 +136,15 @@ def resume_download(api, source, target):
     return target
 
 
-def download(api, source, target):
+def download(api, source, target, checksum=None):
     # Downloads the whole file
     # Returns the local filename if succesful, else None
+    # If checksum provided, calculate it on the fly
     logger.info("Downloading")
     headers = requests.utils.default_headers()
     headers.update({"User-Agent": user_agent, "Authorization": api})
+
+    md5_object = hashlib.md5()
 
     try:
         with requests.get(
@@ -150,11 +153,24 @@ def download(api, source, target):
             r.raise_for_status()
             with open(target, "wb") as f:
                 for chunk in r.iter_content(chunk_size=8192):
+                    if checksum is not None:
+                        md5_object.update(chunk)
                     f.write(chunk)
     except requests.exceptions.HTTPError as exception:
         logger.error("Failed download")
         logger.error(exception)
         return None
+
+    if checksum is not None:
+        # Returns true if file matches checksum
+        md5_hash = md5_object.hexdigest()
+
+        if md5_hash == checksum:
+            logger.info(f"VALID checksum for {target} matches {checksum}")
+        else:
+            logger.warning(f"FAILED checksum for {target} does not match {checksum}")
+            return None
+
     return target
 
 
@@ -342,11 +358,7 @@ def process_downloads(api_key, url_list, md5_file, target_dir):
                     continue
                 logger.info("File %s - not present, downloading..." % (filename,))
                 counts["fresh"] += 1
-                if download(api_key, url, dl_path):
-                    valid = check_md5sum(dl_path, md5[filename])
-                else:
-                    valid = False
-                if valid:
+                if download(api_key, url, dl_path, md5[filename]):
                     counts["valid"] += 1
                 else:
                     # assume transfer failed, keep the file around
@@ -416,13 +428,8 @@ def process_downloads(api_key, url_list, md5_file, target_dir):
                         counts["corrupted"] += 1
                         os.remove(dl_path)
                     counts["redownload"] += 1
-                    if download(api_key, url, dl_path):
-                        valid = check_md5sum(dl_path, md5[filename])
-                    else:
-                        valid = False
-                    if valid:
+                    if download(api_key, url, dl_path, md5[filename]):
                         counts["valid"] += 1
-                        print(filename)
                     else:
                         counts["invalid"] += 1
                 if local > remote:
@@ -432,13 +439,8 @@ def process_downloads(api_key, url_list, md5_file, target_dir):
                     counts["corrupted"] += 1
                     os.remove(dl_path)
                     counts["redownload"] += 1
-                    if download(api_key, url, dl_path):
-                        valid = check_md5sum(dl_path, md5[filename])
-                    else:
-                        valid = False
-                    if valid:
+                    if download(api_key, url, dl_path, md5[filename]):
                         counts["valid"] += 1
-                        print(filename)
                     else:
                         counts["invalid"] += 1
 

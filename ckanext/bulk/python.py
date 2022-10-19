@@ -144,7 +144,9 @@ def download(api, source, target):
     headers.update({"User-Agent": user_agent, "Authorization": api})
 
     try:
-        with requests.get(source, stream=True, headers=headers) as r:
+        with requests.get(
+            source, stream=True, headers=headers, allow_redirects=True
+        ) as r:
             r.raise_for_status()
             with open(target, "wb") as f:
                 for chunk in r.iter_content(chunk_size=8192):

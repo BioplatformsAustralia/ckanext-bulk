@@ -317,6 +317,7 @@ def process_downloads(api_key, url_list, md5_file, target_dir):
                 sys.exit(2)
 
             counts["processed"] += 1
+            logger.info("-----------")
             logger.info("       File: %d/%d" % (counts["processed"], len(md5)))
             logger.info("Downloading: %s" % (filename,))
             logger.info("       from: %s" % (url,))
@@ -440,6 +441,7 @@ def process_downloads(api_key, url_list, md5_file, target_dir):
                         counts["invalid"] += 1
 
     # Summary after all files/URLs processed
+    logger.info("-----------")
     logger.info("Session summary: %s" % (str(counts),))
 
     if counts["valid"] == len(md5):

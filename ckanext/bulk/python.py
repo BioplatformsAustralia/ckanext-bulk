@@ -68,7 +68,7 @@ def check_md5sum(fullpath, checksum):
     filename = fullpath.split(os.path.sep)[-1]
 
     md5_object = hashlib.md5()
-    block_size = 1024 * md5_object.block_size
+    block_size = 64 * 1024 * md5_object.block_size
 
     f = open(fullpath, "rb")
     chunk = f.read(block_size)

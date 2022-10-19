@@ -26,6 +26,7 @@ import platform
 import os
 import hashlib
 import logging
+from urllib.parse import urlparse
 
 if __name__ == "__main__":
     # Unfortunately, we need requests
@@ -93,7 +94,17 @@ def get_remote_file_size(api, url):
     headers.update({"User-Agent": user_agent, "Authorization": api})
 
     resGet = requests.get(url, stream=True, headers=headers)
-    file_size = int(resGet.headers["Content-length"])
+    contentLength = resGet.headers.get("Content-length")
+    if contentLength is None:
+        u = urlparse(resGet.url)
+        if u.path == '/user/login':
+            logger.warning("Potential CKAN_API_KEY issue or insufficient access to requested resource")
+        else:
+            logger.warning("Unknown error")
+            logger.warning(u.path)
+        logger.warning("Email QUERY.txt file and output to help@bioplatforms.com for support")
+        return None
+    file_size = int(contentLength)
     return file_size
 
 
@@ -315,9 +326,17 @@ def process_downloads(api_key, url_list, md5_file, target_dir):
 
             if not (os.path.isfile(dl_path) and os.access(dl_path, os.R_OK)):
                 #    If file not present,
+                #        Check file size on mirror, note error, skip
                 #        begin download
                 #        Check MD5 sum
                 #        Log errors
+                logger.info("Checking file size and access...")
+                remote = get_remote_file_size(api_key, url)
+                if remote is None:
+                    logger.warning("Remote file size could not determined, skipping")
+                    counts["noremotesize"] += 1
+                    counts["failed"] += 1
+                    continue
                 logger.info("File %s - not present, downloading..." % (filename,))
                 counts["fresh"] += 1
                 if download(api_key, url, dl_path):
@@ -354,6 +373,7 @@ def process_downloads(api_key, url_list, md5_file, target_dir):
                 remote = get_remote_file_size(api_key, url)
                 if remote is None:
                     logger.warning("Remote file size could not determined")
+                    logger.info("Checking file integrity anyhow...")
                     counts["noremotesize"] += 1
                     valid = check_md5sum(dl_path, md5[filename])
                     if valid:

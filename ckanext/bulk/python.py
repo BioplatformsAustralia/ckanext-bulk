@@ -6,7 +6,7 @@ PY_TEMPLATE = '''\
 #
 # This Python script was automatically generated.
 
-# Copyright 2021 Bioplatforms Australia
+# Copyright 2022 Bioplatforms Australia
 
 # License - GNU Affero General Public License v3.0
 # https://github.com/BioplatformsAustralia/ckanext-bulk/blob/master/LICENSE.txt
@@ -18,7 +18,7 @@ bpa_dltool_slug = "{{ prefix }}"
 bpa_username = "{{ username }}"
 
 # Static constants
-user_agent = "data.bioplatforms.com download.py/0.4 (Contact help@bioplatforms.com)"
+user_agent = "data.bioplatforms.com download.py/0.5 (Contact help@bioplatforms.com)"
 
 # All imports should be from the base python
 import sys

@@ -1,0 +1,15 @@
+
+{% asset 'ckanext-bulk/bulk_js' %}
+{% asset 'ckanext-bulk/bulk_css' %}
+<div class="bulkdl">
+  <div class="bulkdl-lr">
+      <button class="btn, btn-default"
+              data-module="bulk_download_popover"
+              data-module-title="A zip archive will download. Extract it, and then follow the instructions in the README file to download this data in bulk."
+              data-module-wording="{% snippet 'ckanext_bulk/snippets/bulk_explanation.html' %}"
+              data-module-url="{{ url }}">
+    <i class="btn, btn-default, fa fa-download">{{ _(' Bulk download (metadata and data)') }}</i>
+  </button>
+      </div>
+</div>
+

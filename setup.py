@@ -20,11 +20,8 @@ setup(
             "templates/*.html",
             "templates/*/*.html",
             "templates/*/*/*.html",
-            "static/*.css",
-            "static/*.png",
-            "static/*.jpg",
-            "static/*.css",
-            "static/*.ico",
+            "public/*/*.css",
+            "public/*/*.js",
         ]
     },
     entry_points="""

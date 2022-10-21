@@ -1,0 +1,18 @@
+{% set url = h.add_url_param(h.url_for('bulk.package_search_list'), new_params=request.params) %}
+{% if c.userobj %}
+	{% if q is defined or c.userobj.sysadmin %}
+      {{ h.snippet('ckanext_bulk/ajax_snippets/bulk_download_popover.html', query=q, url=url) }}
+    {% endif %}
+{% else %}
+<div class="bulkdl">
+  <div class="bulkdl-lr">
+    <i class="fa fa-icon fa-user"></i>
+    <a href="{{ h.url_for('user.login') }}" >{{ _('Log in') }}</a> {{ _('or') }} <a href="{{ h.url_for('user.register') }}" >{{ _('Register')}}</a> {{ _('to access resource')}}
+  </div>
+  <div class="bulkdl-btn">
+   <span class="d-inline-block restricted-item pull-left" data-toggle="tooltip" title="Register or login to download">
+      <a class="btn btn-default disabled" href="#" target="_blank" tabindex="-1"><i class="fa fa-download"></i> {{ _('Bulk download (metadata and data)') }}</a>
+   </span>
+  </div>
+</div>
+{% endif %}

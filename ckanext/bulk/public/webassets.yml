@@ -1,0 +1,14 @@
+bulk_js:
+  filters: rjsmin
+  output: ckanext-bulk%(version)s_bulk.js
+  extra:
+    preload:
+      - base/main
+  contents:
+    - js/bulk_download_popover.js
+
+bulk_css:
+  filters: cssrewrite
+  output: ckanext-bulk/%(version)s_bulk.css
+  contents:
+     - css/bulk_download_popover.css

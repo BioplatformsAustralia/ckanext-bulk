@@ -6,7 +6,6 @@
 ckan.module('bulk_download_popover', function ($) {
   return {
     initialize: function () {
-      console.log("bulk download popover initialized for element: ", this.el);
       $.proxyAll(this, /_on/);
 
        // Access some options passed to this JavaScript module by the calling
@@ -16,7 +15,7 @@ ckan.module('bulk_download_popover', function ($) {
       var url = this.options.url;
       var visible = false;
 
-      var content = 'WORDS   <a class="btn, fa fa-download" href="URL"> Download Zip</a>'
+      var content = 'WORDS   <a class="btn btn-primary fa fa-download" href="URL"> Download Zip</a>'
         .replace('WORDS', wording)
         .replace('URL', url)
 
@@ -31,10 +30,7 @@ ckan.module('bulk_download_popover', function ($) {
     },
     _popover_visible: true,
 
-    _onClick: function(elem) {
-              console.log("popover onclick fired: ");
-              console.log("this.el",  this.el);
-              console.log("elem.target",  elem.target);
+    _onClick: function(elem) {;
        // Wrap this in an if, because we don't want this object to respond to
       // its own 'dataset_popover_clicked' event.
       if (this.el.length > 1) {

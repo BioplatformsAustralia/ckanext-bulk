@@ -1,16 +1,13 @@
 {% set url = h.add_url_param(h.url_for('bulk.organization_file_list', id=id), new_params=request.params) %}
-{% if request.params.q is defined or c.userobj.sysadmin %}
+{% if c.userobj %}
+	{% if request.params.q is defined or c.userobj.sysadmin %}
       {{ h.snippet('ckanext_bulk/ajax_snippets/bulk_download_popover.html', query=request.params.q, url=url) }}
-    {% else %}
+    {% endif %}
+{% else %}
 <div class="bulkdl">
   <div class="bulkdl-lr">
     <i class="fa fa-icon fa-user"></i>
-    <a href="{{ h.url_for('user.login', came_from='/organization/'+c.group_dict.name) }}" >{{ _('Log in') }}</a> {{ _('or') }} <a href="{{ h.url_for('user.register') }}" >{{ _('Register')}}</a> {{ _('to access resource')}}
-  </div>
-  <div class="bulkdl-btn">
-     <span class="d-inline-block restricted-item pull-left" data-toggle="tooltip" title="Register or login to download">
-       <a class="btn btn-default disabled" href="#" target="_blank" tabindex="-1"><i class="fa fa-download"></i> {{ _('Bulk download (metadata and data)') }}</a>
-    </span>
+    <a href="{{ h.url_for('user.login') }}" >{{ _('Log in') }}</a> {{ _('or') }} <a href="{{ h.url_for('user.register') }}" >{{ _('Register')}}</a> {{ _('to access resource')}}
   </div>
 </div>
 {% endif %}

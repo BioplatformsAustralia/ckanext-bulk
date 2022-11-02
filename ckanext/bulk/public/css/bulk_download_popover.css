@@ -1,6 +1,10 @@
  .popover {
-  border: none;
+  border: 1px;
   margin: 0;
   padding: 0;
   width: 600px;
+  max-width: 600px;
+}
+ .popover .popover-content {
+     word-break: normal;
 }

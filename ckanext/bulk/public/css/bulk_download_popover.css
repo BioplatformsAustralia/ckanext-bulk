@@ -1,10 +1,37 @@
  .popover {
-  border: 1px;
-  margin: 0;
-  padding: 0;
-  width: 600px;
-  max-width: 600px;
+     border: 1px;
+     margin: 0;
+     width: 600px;
+     max-width: 600px;
+     margin: 30px auto;
+     border-radius: 6px;
 }
  .popover .popover-content {
      word-break: normal;
+     padding: 15px;
+     box-sizing: border-box;
+     background-color: #ffffff;
+     background-clip: padding-box;
+     line-height: 1.42857143;
 }
+ .popover-title {
+     padding: 8px 14px;
+     margin: 0;
+     font-size: 14px;
+     background-color: #ffffff;
+     border-bottom: 1px solid #e5e5e5;
+ }
+ .popover-header{
+     font-weight: bold;
+     background-color: #ffffff;
+     border-bottom: 1px solid #e5e5e5;
+     margin: 0;
+ }
+ .popover-content {
+          padding: 8px 14px;
+          margin-bottom: 10px;
+          border-bottom: 1px solid #e5e5e5;
+ }
+ .popover-btn {
+     margin: 25px 0px 10px;
+ }

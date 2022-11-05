@@ -3,7 +3,7 @@ from setuptools import setup
 
 setup(
     name="ckanext-bulk",
-    version="1.5.1",
+    version="1.5.2",
     description="",
     license="GPL3",
     author="Bioplatforms Australia",

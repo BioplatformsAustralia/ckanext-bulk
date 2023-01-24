@@ -6,7 +6,7 @@ PY_TEMPLATE = '''\
 #
 # This Python script was automatically generated.
 
-# Copyright 2022 Bioplatforms Australia
+# Copyright 2023 Bioplatforms Australia
 
 # License - GNU Affero General Public License v3.0
 # https://github.com/BioplatformsAustralia/ckanext-bulk/blob/master/LICENSE.txt
@@ -98,7 +98,7 @@ def get_remote_file_size(api, url):
     if contentLength is None:
         u = urlparse(resGet.url)
         if u.path == '/user/login':
-            logger.warning("Potential CKAN_API_KEY issue or insufficient access to requested resource")
+            logger.warning("Potential CKAN_API_TOKEN issue or insufficient access to requested resource")
         else:
             logger.warning("Unknown error")
             logger.warning(u.path)
@@ -175,21 +175,23 @@ def download(api, source, target, checksum=None):
 
 
 def check_for_api_key():
-    # Check for CKAN API Key in the users environment
-    # Returns the API Key if found, aborts otherwise
+    # Check for CKAN API Key or token in the users environment
+    # Returns the API Token first,or the Key if found, aborts otherwise
 
     api_key_message = """\
-    Please set the CKAN_API_KEY environment variable.
+    Please set the CKAN_API_TOKEN environment variable.
     
 {% if user_page %}
-    You can find your API Key by browsing to:
+    You can generate your API Token by browsing to:
         {{ user_page }}
     
-    It will be in the bottom left hand corner of the web page.
+    Go to the API Tokens tab, and generate your token.
     
 {% endif %}
-    The API key has the format:
+    The API key of the format:
         xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx
+    is now obsolete, and should be replaced wih a freshly
+    generated API Token.
     """
 
     nix_instructions = """\
@@ -197,19 +199,19 @@ def check_for_api_key():
     the following command before running download.sh
     substituting your API key as required:
     
-    export CKAN_API_KEY=xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx
+    export CKAN_API_TOKEN=************************************
     
     You can check if it has been set correctly with the command:
     
-    printenv CKAN_API_KEY
+    printenv CKAN_API_TOKEN
     """
 
     win_instructions = """\
     On Microsoft Windows, within Powershell, use:
-    $env:CKAN_API_KEY="xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx"
+    $env:CKAN_API_TOKEN="**************************************"
     
     On Microsoft Windows, within a Command shell, use:
-    set CKAN_API_KEY=xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx
+    set CKAN_API_TOKEN=***************************************
     
     You can check if it has been set correctly with the commands:
     
@@ -217,21 +219,31 @@ def check_for_api_key():
     set       (for a Command shell)
     """
 
-    api_key = os.environ.get("CKAN_API_KEY")
+    api = ''
+    api_token = os.environ.get("CKAN_API_TOKEN")
 
-    if not api_key:
-        logger.warning("No API key set")
-        print(api_key_message)
-        if "Windows" in platform.platform():
-            print(win_instructions)
+    if not api_token:
+        logger.warning("No API token set, trying obsolete API key")
+        api_key = os.environ.get("CKAN_API_KEY")
+
+        if not api_key:
+            logger.warning("No API token OR key set")
+            print(api_key_message)
+            if "Windows" in platform.platform():
+                print(win_instructions)
+            else:
+                print(nix_instructions)
+            sys.exit(1)
         else:
-            print(nix_instructions)
-        sys.exit(1)
+            logger.info("API key found")
+            api = api_key
 
-    logger.info("API key found")
+    else:
+        logger.info("API token found")
+        api = api_token
     logger.info("Platform: %s" % platform.platform())
 
-    return api_key
+    return api
 
 
 def file_present(filename, description):

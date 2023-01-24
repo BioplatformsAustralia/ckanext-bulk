@@ -1,26 +1,31 @@
 POWERSHELL_TEMPLATE = """\
 #!/usr/bin/env pwsh
 
+$env:CKAN_API_TOKEN=""
 {% if user_page %}
 $apikey = $Env:CKAN_API_KEY
-if (!$apikey) {
-  'Please set the CKAN_API_KEY environment variable.'
+$apitoken = $Env:CKAN_API_TOKEN
+if (!$apikey && !$apitoken) {
+  'Please set the CKAN_API_TOKEN environment variable.'
   ''
-  'You can find your API Key by browsing to:'
+  'You can create your API Token by browsing to:'
   '{{ user_page }}'
   ''
-  'The API key has the format:'
+  'The API key which has the format:'
   'xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx'
+  'is now obsolete, and you should create and use the'
+  'API token insted. '
   ''
   'To set the environment variable in Linux/MacOS/Unix, use:'
-  'export CKAN_API_KEY=xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx'
+  'export CKAN_API_TOKEN=**********************************'
   ''
   'On Microsoft Windows, within Powershell, use:'
-  '$env:CKAN_API_KEY="xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx"'
+  '$env:CKAN_API_TOKEN="******************************"'
   exit 1
 }
 {% else %}
 $apikey = $null;
+$apitoken = $null;
 {% endif %}
 
 #
@@ -35,9 +40,14 @@ function DownloadURL($url)
         return
     }
     $client = new-object System.Net.WebClient
-    if ($apikey) {
-        $client.Headers.Add('Authorization: ' + $apikey)
-    }
+    if ($apitoken) {
+        $client.Headers.Add('Authorization: ' + $apitokeny)
+    } else {
+        if ($apikey) {
+            $client.Headers.Add('Authorization: ' + $apikey)
+        }
+    }   
+    
     "Downloading: " + $filename
     $client.DownloadFile($url, $filename)
 }

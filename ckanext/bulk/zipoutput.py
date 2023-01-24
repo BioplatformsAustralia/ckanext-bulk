@@ -45,19 +45,27 @@ UNIX shell script, which when executed will download the files,
 and then checksum them. This is supported on any Linux or MacOS/BSD
 system, so long as `curl` is installed.
 
-Before running either of these scripts, please set the CKAN_API_KEY
+Before running either of these scripts, please set the CKAN_API_TOKEN
 environment variable.
 
-You can find your API Key by browsing to:
-{user_page}
+You need to create your API TOKEN within the data portal and copy/save it.
+You then use this token whenever you wish to download
+data from the data portal.
 
-The API key has the format:
+You can create your API Token by browsing to:
+{user_page}, and clicking the API Tokens tab.
+Enter a name for your token, then click "Create API Token".
+
+The API key of the format:
 xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx
+is now obsolete, and you should use the instructions above to 
+create your new API token.
+ 
 To set the environment variable in Linux/MacOS/Unix, use:
-export CKAN_API_KEY=xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx
+export CKAN_API_TOKEN=xxxxxxxxxxxxxxxxxxx
 
 On Microsoft Windows, within Powershell, use:
-$env:CKAN_API_KEY="xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx"
+$env:CKAN_API_TOKEN="xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
 
 
 organization_metadata folder:

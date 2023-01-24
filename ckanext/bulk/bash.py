@@ -7,28 +7,55 @@ SH_TEMPLATE = """\
 # This UNIX shell script was automatically generated.
 #
 {% if user_page %}
-if [ x"$CKAN_API_KEY" = "x" ]; then
-  echo "Please set the CKAN_API_KEY environment variable."
-  echo
-  echo "You can find your API Key by browsing to:"
-  echo "{{ user_page }}"
-  echo
-  echo "It will be in the bottom left hand corner of the web page."
-  echo
-  echo "The API key has the format:"
-  echo "xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx"
-  echo
-  echo "To set the environment variable in Linux/MacOS/Unix, use"
-  echo "the following command before running download.sh"
-  echo "substituting your API key as required:"
-  echo
-  echo "export CKAN_API_KEY=xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx"
-  echo
-  echo "You can check if it has been set correctly with the command:"
-  echo
-  echo "printenv CKAN_API_KEY"
-  exit 1
+if [ x"$CKAN_API_TOKEN" = "x" ]; then
+  if [ x"$CKAN_API_KEY" = "x" ]; then
+    echo "Please set the CKAN_API_TOKEN environment variable."
+    echo
+    echo "You can create your API Token by browsing to:"
+    echo "{{ user_page }}"
+    echo
+    echo "Go to the API Tokens tab, and generate your token."
+    echo
+    echo "The API token is a long string of letters and digits"
+    echo
+    echo "To set the environment variable in Linux/MacOS/Unix, use"
+    echo "the following command before running download.sh"
+    echo "substituting your API token as required:"
+    echo
+    echo "export CKAN_API_TOKEN=***********************************"
+    echo
+    echo "You can check if it has been set correctly with the command:"
+    echo
+    echo "printenv CKAN_API_TOKEN"
+    if [ -t 0 ] ; then
+       read -p "Press key to continue... (script will exit) " -n1 -s
+    fi
+    exit 1
+  else
+    echo "The API key of the format xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx"
+    echo "is now obsolete, and should be replaced wih a freshly generated API Token. "
+    echo "You can create your API Token by browsing to:"
+    echo "{{ user_page }}"
+    echo
+    echo "Go to the API Tokens tab, and generate your token."
+    echo
+    echo "The API token is a long string of letters and digits"
+    echo
+    echo "To set the environment variable in Linux/MacOS/Unix, use"
+    echo "the following command before running download.sh"
+    echo "substituting your API token as required:"
+    echo
+    echo "export CKAN_API_TOKEN=***********************************"
+    echo
+    echo "You can check if it has been set correctly with the command:"
+    echo
+    echo "printenv CKAN_API_TOKEN"
+     if [ -t 0 ] ; then
+       read -p "Press key to continue... script will run using the KEY provided " -n1 -s
+     fi
+  fi
 fi
+
 {% endif %}
 
 # Check we are being run from a suitable location

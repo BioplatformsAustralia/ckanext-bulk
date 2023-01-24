@@ -1,7 +1,7 @@
 {% set url = h.url_for('bulk.package_file_list', id=id) %}
 {% if c.userobj %}
-	{% if request.params.q is defined or c.userobj.sysadmin %}
-      {{ h.snippet('ckanext_bulk/ajax_snippets/bulk_download_popover.html', query=q, url=url) }}
+	{% if request.params.q is defined or c.userobj.sysadmin or q == 'forced_by_facet' %}
+      {{ h.snippet('ckanext_bulk/ajax_snippets/bulk_download_popover.html', url=url) }}
     {% endif %}
 {% else %}
 <div class="bulkdl">

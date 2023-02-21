@@ -34,7 +34,9 @@ $apitoken = $null;
 
 function DownloadURL($url)
 {
-    $filename = $url.Substring($url.lastIndexOf('/') + 1)
+    $filename_only = $url.Substring($url.lastIndexOf('/') + 1)
+    $filename = ($PSScriptRoot + '/' + $filename_only)
+
     if (Test-Path $filename) {
         "File already exists, skipping download: " + $filename
         return
@@ -48,7 +50,7 @@ function DownloadURL($url)
         }
     }   
     
-    "Downloading: " + $filename
+    "Downloading: " + $filename_only
     $client.DownloadFile($url, $filename)
 }
 
@@ -73,11 +75,13 @@ function VerifyMD5([String]$filename, [String]$expected_md5)
     }
 }
 
+# Force downloads to location where script is
+Set-Location -Path $PSScriptRoot
 
 'Commencing bulk download of data from CKAN:'
 ''
 
-$urls = Get-Content '{{ urls_fname }}'
+$urls = Get-Content  ($PSScriptRoot + '/' + '{{ urls_fname }}')
 ForEach ($line in $urls) {
     DownloadURL $line
 }
@@ -86,7 +90,7 @@ ForEach ($line in $urls) {
 ''
 'Verifying file checksums:'
 ''
-$md5s = Get-Content '{{ md5sum_fname }}'
+$md5s = Get-Content ($PSScriptRoot + '/' + '{{ md5sum_fname }}')
 ForEach ($line in $md5s) {
     $md5, $filename = $line.Split(" ",[StringSplitOptions]'RemoveEmptyEntries')
     VerifyMD5 $filename $md5

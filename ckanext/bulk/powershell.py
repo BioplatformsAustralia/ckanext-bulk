@@ -41,7 +41,7 @@ function DownloadURL($url)
     }
     $client = new-object System.Net.WebClient
     if ($apitoken) {
-        $client.Headers.Add('Authorization: ' + $apitokeny)
+        $client.Headers.Add('Authorization: ' + $apitoken)
     } else {
         if ($apikey) {
             $client.Headers.Add('Authorization: ' + $apikey)

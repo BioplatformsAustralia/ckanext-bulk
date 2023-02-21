@@ -1,20 +1,25 @@
 POWERSHELL_TEMPLATE = """\
 #!/usr/bin/env pwsh
 
-$env:CKAN_API_TOKEN=""
 {% if user_page %}
 $apikey = $Env:CKAN_API_KEY
 $apitoken = $Env:CKAN_API_TOKEN
-if (!$apikey && !$apitoken) {
-  'Please set the CKAN_API_TOKEN environment variable.'
-  ''
-  'You can create your API Token by browsing to:'
-  '{{ user_page }}'
+
+if ($apikey -and !$apitoken) {
+  'Migrate from CKAN_API_KEY to CKAN_API_TOKEN'
   ''
   'The API key which has the format:'
   'xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx'
   'is now obsolete, and you should create and use the'
-  'API token insted. '
+  'API token instead. '
+  ''
+}
+
+if (!$apitoken) {
+  'Please set the CKAN_API_TOKEN environment variable.'
+  ''
+  'You can create your API Token by browsing to:'
+  '{{ user_page }}'
   ''
   'To set the environment variable in Linux/MacOS/Unix, use:'
   'export CKAN_API_TOKEN=**********************************'

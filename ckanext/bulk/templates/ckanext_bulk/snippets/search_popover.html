@@ -1,6 +1,6 @@
 {% set url = h.add_url_param(h.url_for('bulk.package_search_list'), new_params=request.params) %}
 {% if c.userobj %}
-	{% if request.params.q is defined or c.userobj.sysadmin or q == 'forced_by_facet' %}
+	{% if request.params.q  or c.userobj.sysadmin or q == 'forced_by_facet' %}
       {{ h.snippet('ckanext_bulk/ajax_snippets/bulk_download_popover.html', url=url) }}
     {% endif %}
 {% else %}

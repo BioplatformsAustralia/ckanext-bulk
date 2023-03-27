@@ -149,7 +149,12 @@ fi
 echo "Downloading data"
 while read URL; do
   echo "Downloading: $URL"
-  $CURL -O -L -C - -A "$BPA_AGENT" -H "Authorization: $CKAN_API_KEY" "$URL"
+  if [ x"$CKAN_API_TOKEN" = "x" ]; then
+      $CURL -O -L -C - -A "$BPA_AGENT" -H "Authorization: $CKAN_API_TOKEN" "$URL"
+  fi
+  if [ x"$CKAN_API_KEY" = "x" ]; then
+      $CURL -O -L -C - -A "$BPA_AGENT" -H "Authorization: $CKAN_API_KEY" "$URL"
+  fi  
   if [ $? -ne 0 ] ; then
      echo "Error downloading: $URL"
   fi

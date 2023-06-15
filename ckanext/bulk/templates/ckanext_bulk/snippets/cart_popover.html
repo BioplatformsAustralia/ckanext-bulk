@@ -1,0 +1,13 @@
+<script src="/js/bulk_download_popover.js"></script>
+<link href="/css/bulk_download_popover.css" rel="stylesheet"/>
+{% if g.userobj %}
+    {% set url = h.add_url_param(h.url_for('bulk.cart_file_list', target_user=username)) %}
+    {{ h.snippet('ckanext_bulk/ajax_snippets/bulk_download_popover.html', url=url) }}
+{% else %}
+<div class="bulkdl">
+  <div class="bulkdl-lr">
+    <i class="fa fa-icon fa-user"></i>
+    <a href="{{ h.url_for('user.login') }}" >{{ _('Log in') }}</a> {{ _('or') }} <a href="{{ h.url_for('user.register') }}" >{{ _('Register')}}</a> {{ _('to access resource')}}
+  </div>
+</div>
+{% endif %}

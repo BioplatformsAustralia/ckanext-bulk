@@ -7,7 +7,7 @@
 <div class="bulkdl">
   <div class="bulkdl-lr">
     <i class="fa fa-icon fa-user"></i>
-    <a href="{{ h.url_for('user.login') }}" >{{ _('Log in') }}</a> {{ _('or') }} <a href="{{ h.url_for('user.register') }}" >{{ _('Register')}}</a> {{ _('to access resource')}}
+    <a href="{{ h.url_for('saml2auth.saml2login') }}" >{{ _('Log in') }}</a> {{ _('or') }} <a href="{{ h.url_for('user.register') }}" >{{ _('Register')}}</a> {{ _('to access resource')}}
   </div>
 </div>
 {% endif %}

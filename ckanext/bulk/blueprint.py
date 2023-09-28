@@ -99,7 +99,7 @@ def organization_file_list(id):
     resources = list(_resources())
 
     site_url = config.get("ckan.site_url").rstrip("/")
-    query = request.params.get(u"q", u"")
+    query = request.params.get("q", "")
     query_url = "%s%s" % (
         site_url,
         h.add_url_param(
@@ -135,7 +135,7 @@ def package_search_list():
         abort(403, _("Not authorized to see this page"))
 
     # unicode format (decoded from utf8)
-    q = request.params.get("q", u"")
+    q = request.params.get("q", "")
     c.query_error = False
 
     c.fields = []
@@ -291,37 +291,38 @@ def package_file_list(id):
         download_url,
     )
 
+
 def cart_file_list(target_user):
     limit = p.toolkit.asint(config.get("ckanext.bulk.limit", 100))
-    site_user = tk.get_action("get_site_user")({'ignore_auth': True}, {})["name"]
-    admin_ctx = {"ignore_auth": True, "user": site_user }
+    site_user = tk.get_action("get_site_user")({"ignore_auth": True}, {})["name"]
+    admin_ctx = {"ignore_auth": True, "user": site_user}
     # Only allow impersonation if an admin
     username = c.userobj.name
     if c.userobj.name != target_user:
         if c.userobj.sysadmin is True:
-            username = target_user 
-    
-    user_id = { "id": username, "include_plugin_extras": True }
-    user = tk.get_action('user_show')(admin_ctx, user_id)
+            username = target_user
+
+    user_id = {"id": username, "include_plugin_extras": True}
+    user = tk.get_action("user_show")(admin_ctx, user_id)
     plugin_extras = {}
-    if 'plugin_extras' in user and user.get('plugin_extras') is not None:
-        plugin_extras = user.get('plugin_extras')
+    if "plugin_extras" in user and user.get("plugin_extras") is not None:
+        plugin_extras = user.get("plugin_extras")
     else:
-        abort(404, _("Cart plugin not installed"))    
+        abort(404, _("Cart plugin not installed"))
 
     cart_key = "shopping_cart__"
-    cart_name = request.params.get('cart', '')
+    cart_name = request.params.get("cart", "")
     if cart_name is not None:
         cart_key = f"shopping_cart__{cart_name}"
-    else: 
-        abort(404, _("Cart name is not specified"))    
+    else:
+        abort(404, _("Cart name is not specified"))
 
     cart = None
     if cart_key in plugin_extras:
         cart = plugin_extras.get(cart_key)
     else:
         abort(404, _("Cart is missing"))
-    
+
     # Note: context is running as the super admin in case current user has no access to the package
     context = {
         "model": model,
@@ -337,11 +338,11 @@ def cart_file_list(target_user):
     org_dict = {}
     for package_id, package_details in cart.items():
         # check if package exists and retrieve the resources
-        package_q['id'] = package_id
+        package_q["id"] = package_id
         try:
             pkg_dict = get_action("package_show")(context, package_q)
         except (NotFound, NotAuthorized):
-            abort(404, _("Dataset not found"))    
+            abort(404, _("Dataset not found"))
         package_resources = pkg_dict["resources"]
         # check if the org is already added
         org_id = package_details["organization_id"]
@@ -353,16 +354,16 @@ def cart_file_list(target_user):
                 orgs.append(org_new)
             except (NotFound, NotAuthorized):
                 abort(404, _("Organization not found"))
-        
+
         packages.append(pkg_dict)
         resources = resources + package_resources
-      
+
     site_url = config.get("ckan.site_url").rstrip("/")
     query = None
     # as per BG's advice, point to the cart
     query_url = f"{site_url}/cart/{username}"
     download_url = request.url
-    
+
     return generate_bulk_zip(
         prefix_from_components([username]),
         "Cart: %s" % (username,),
@@ -375,22 +376,23 @@ def cart_file_list(target_user):
         download_url,
     )
 
+
 bulk.add_url_rule(
-    u"/bulk/organization/<id>/file_list",
+    "/bulk/organization/<id>/file_list",
     view_func=organization_file_list,
-    methods=[u"GET", u"POST"],
+    methods=["GET", "POST"],
 )
 bulk.add_url_rule(
-    u"/bulk/dataset/<id>/file_list",
+    "/bulk/dataset/<id>/file_list",
     view_func=package_file_list,
-    methods=[u"GET", u"POST"],
+    methods=["GET", "POST"],
 )
 bulk.add_url_rule(
-    u"/bulk/dataset/file_list", view_func=package_search_list, methods=[u"GET", u"POST"]
+    "/bulk/dataset/file_list", view_func=package_search_list, methods=["GET", "POST"]
 )
 
 bulk.add_url_rule(
-    u"/bulk/cart/<target_user>/file_list",
+    "/bulk/cart/<target_user>/file_list",
     view_func=cart_file_list,
-    methods=[u"GET", u"POST"],
+    methods=["GET", "POST"],
 )

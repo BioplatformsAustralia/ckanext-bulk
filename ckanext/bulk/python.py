@@ -18,7 +18,7 @@ bpa_dltool_slug = "{{ prefix }}"
 bpa_username = "{{ username }}"
 
 # Static constants
-user_agent = "data.bioplatforms.com download.py/0.5 (Contact help@bioplatforms.com)"
+user_agent = "data.bioplatforms.com download.py/0.6 (Contact help@bioplatforms.com)"
 
 # All imports should be from the base python
 import sys
@@ -290,6 +290,9 @@ def main():
 
     # Add QUERY.txt to debug output
     log_file_when_present(query_file, "QUERY.txt")
+
+    # Add MEMBERSHIPS.txt to debug output
+    log_file_when_present(query_file, "MEMBERSHIPS.txt")
 
     # Check we are being run from a suitable location
 

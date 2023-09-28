@@ -5,6 +5,8 @@ import datetime
 import codecs
 import csv
 import bitmath
+import os
+import ckan.plugins.toolkit as tk
 from collections import defaultdict
 from ckan.plugins.toolkit import config
 from urllib.parse import urlparse
@@ -84,6 +86,10 @@ Contains metadata spreadsheets as CSV for all selected data resources (files).
 QUERY.txt:
 Text file which contains metadata about the download results and the original
 query
+
+MEMBERSHIPS.txt:
+Text file which contains information about the organization memberships
+you hold and those required to access these datasets
 
 tmp folder:
 This folder contains files required by the download scripts. Its
@@ -246,10 +252,96 @@ def encode_field(field_name):
         return field_name.decode("utf8")
 
 
+def generate_memberships_information(
+    prefix,
+    timestamp,
+    title,
+    user_page,
+    organization_count,
+    memberships,
+    access_required,
+):
+    def _requestable(organization):
+        # Must be visible in our organization lists to be requestable
+
+        # Depends on ytp-request here
+        requestable = tk.get_action('get_available_organizations')({}, {})
+
+        org_allowed = False
+
+        for org in requestable:
+            if organization['name'] == org['name']:
+                org_allowed = True
+                break
+
+        # check if Private as well
+        for extra in organization.get("extras"):
+            if extra.get("key") == "Private" and extra.get("value") == "True":
+                org_allowed = False
+        return org_allowed
+
+    site_description = config.get("ckan.site_description")
+    email = os.environ.get('BIOPLATFORMS_HELPDESK_ADDRESS',config.get('error_email_from', ""))
+
+    # work out the request url
+    site_url = config.get("ckan.site_url").rstrip("/")
+    request_url = "%s%s" % (
+        site_url,
+        h.url_for("member_request.new"),
+    )
+
+    manual_orgs = []
+    output = ""
+
+    if len(memberships):
+        output += "For the %s, you are a member of the \nfollowing organisations:\n" % (site_description,)
+        for org in memberships:
+          output += "    %s\n" % org.get("display_name",org.get("name",""))
+    else:
+        output += "For the %s, you are a not a member of any organisations\n" % (site_description,)
+        output += "\n"
+        output += "Please join at %s\n"
+
+    output += "\n"
+
+    if len(access_required):
+        output += "To access this data you are required to be a member of the\n"
+        output += "following organisations:\n"
+
+        display_url = False
+
+        for org in access_required:
+            if _requestable(org):
+                output += "    %s\n" % org.get("display_name",org.get("name",""))
+                display_url = True
+            else:
+                manual_orgs.append(org)
+        if display_url:
+            output += "\n"
+            output += "    - Request access to the above organisation(s) at\n"
+            output += "          %s\n" % (request_url,)
+
+    if len(manual_orgs):
+        if display_url:
+            output += "\n"
+
+        for org in manual_orgs:
+            output += "    %s\n" % org.get("display_name",org.get("name",""))
+
+        output += "\n"
+        output += "    - Please request access to the above organisation(s) via an email to:\n"
+        output += "          %s\n" % (email,)
+
+
+    return output
+
+
 def generate_bulk_zip(
     pfx,
     title,
     user,
+    memberships,
+    access_required,
     organizations,
     packages,
     resources,
@@ -385,6 +477,21 @@ def generate_bulk_zip(
                 resource_count=resource_count,
                 total_size=bitmath.Byte(bytes=total_size_bytes).best_prefix().format("{value:.2f} {unit}"),
                 total_size_bytes=total_size_bytes,
+            )
+        ),
+    )
+
+    zf.writestr(
+        ip("MEMBERSHIPS.txt"),
+        str_crlf(
+            generate_memberships_information(
+                prefix=pfx,
+                timestamp=get_timestamp(),
+                title=title,
+                user_page=user_page,
+                organization_count=organization_count,
+                memberships=memberships,
+                access_required=access_required,
             )
         ),
     )

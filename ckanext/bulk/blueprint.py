@@ -61,6 +61,77 @@ def query_to_zip_prefix(request, name=None):
     return prefix_from_components(components)
 
 
+def access_required(userobj, packages):
+    # This is implemented by an API call to ckanext-initiatives
+    # We only need to check the first resource for any package
+    # as our access restriction (presently) is only implemented
+    # at package level
+
+    context = {"user": userobj.name}
+
+    orgs = {}
+    orgs_with_extras = []
+
+    def _resources(pkg):
+        for resource in pkg["resources"]:
+            yield resource
+
+    # get unique orgs by name
+    for package in packages:
+        check_resource = None
+        access_check = None
+        resources = list(_resources(package))
+
+        if len(resources):
+            check_resource = resources[0]
+        else:
+            continue
+
+        data_dict = {
+            "package_id": package["id"],
+            "resource_id": check_resource["id"],
+        }
+
+        log.warn(context)
+        log.warn(data_dict)
+
+        try:
+            access_check = get_action("initiatives_check_access")(context, data_dict)
+        except:
+            abort(404, _("Unable to check initiative access"))
+
+        required_org = access_check.get("result", None)
+
+        if required_org:
+            orgs[required_org] = required_org
+
+    for org in list(orgs.items()):
+        name = org[0]
+        org_dict = {"id": org[1]}
+
+        try:
+            # Do not query for the group datasets when dictizing, as they will
+            # be ignored and get requested on the controller anyway
+            org_dict["include_datasets"] = False
+            org_dict["include_users"] = False
+            org_dict["include_extras"] = True
+            found_org_dict = get_action("organization_show")(context, org_dict)
+
+        except (NotFound, NotAuthorized):
+            abort(404, _("Organization not found"))
+
+        orgs_with_extras.append(found_org_dict)
+
+    return orgs_with_extras
+
+
+def memberships(userobj):
+    context = {"user": userobj.name}
+    data_dict = {"permission": "read"}
+
+    return get_action("organization_list_for_user")(context, data_dict)
+
+
 def organization_file_list(id):
     limit = p.toolkit.asint(config.get("ckanext.bulk.limit", 100))
     group_type = _guess_group_type()
@@ -118,6 +189,8 @@ def organization_file_list(id):
         "Search of organization: {}".format(name),
         c.userobj,
         [c.group_dict],
+        memberships(c.userobj),
+        access_required(c.userobj, packages),
         packages,
         resources,
         query,
@@ -236,6 +309,8 @@ def package_search_list():
         query_to_zip_prefix(request),
         "Search of all datasets",
         c.userobj,
+        memberships(c.userobj),
+        access_required(c.userobj, packages),
         organizations,
         packages,
         resources,
@@ -283,6 +358,8 @@ def package_file_list(id):
         dataset_to_zip_prefix(id),
         "Dataset: %s" % (name,),
         c.userobj,
+        memberships(c.userobj),
+        access_required(c.userobj, [pkg_dict]),
         [found_org_dict],
         [pkg_dict],
         pkg_dict["resources"],
@@ -368,6 +445,8 @@ def cart_file_list(target_user):
         prefix_from_components([username]),
         "Cart: %s" % (username,),
         c.userobj,
+        memberships(c.userobj),
+        access_required(c.userobj, packages),
         orgs,
         packages,
         resources,

@@ -85,7 +85,7 @@ if ! which md5sum >/dev/null 2>&1; then
   exit 1
 fi
 
-BPA_AGENT="data.bioplatforms.com download.sh/1.0"
+BPA_AGENT="data.bioplatforms.com download.sh/1.1"
 
 CURL=`which curl`
 
@@ -143,6 +143,30 @@ if [ $? -eq 2 ]; then
   echo "Version available is       : $CURL_VERSION"
   exit 1
 fi
+
+# Output debug information in files
+
+# Output files
+
+function prepend()
+{
+while read line; do
+  echo "${1}${line}";
+done
+}
+
+function output_file()
+{
+if [ -f $1 ]; then
+  echo $1
+  echo
+  cat $1 | prepend "  "
+  echo
+fi
+}
+
+output_file QUERY.txt
+output_file MEMBERSHIPS.txt
 
 # Undertake download
 

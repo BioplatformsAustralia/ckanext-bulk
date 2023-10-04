@@ -275,7 +275,7 @@ def generate_memberships_information(
                 break
 
         # check if Private as well
-        for extra in organization.get("extras"):
+        for extra in organization.get("extras",[]):
             if extra.get("key") == "Private" and extra.get("value") == "True":
                 org_allowed = False
         return org_allowed

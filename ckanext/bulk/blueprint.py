@@ -153,6 +153,7 @@ def organization_file_list(id):
         # Do not query for the group datasets when dictizing, as they will
         # be ignored and get requested on the controller anyway
         data_dict["include_datasets"] = False
+        data_dict["include_extras"] = True
         c.group_dict = _action("group_show")(context, data_dict)
         c.group = context["group"]
     except (NotFound, NotAuthorized):
@@ -188,9 +189,9 @@ def organization_file_list(id):
         query_to_zip_prefix(request, name),
         "Search of organization: {}".format(name),
         c.userobj,
-        [c.group_dict],
         memberships(c.userobj),
         access_required(c.userobj, packages),
+        [c.group_dict],
         packages,
         resources,
         query,

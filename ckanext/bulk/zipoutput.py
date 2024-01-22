@@ -291,7 +291,7 @@ def generate_memberships_information(
     )
 
     manual_orgs = []
-    output = ""
+    output = "Membership information for %s \n" % (user_page)
 
     if len(memberships):
         output += "For the %s, you are a member of the \nfollowing organisations:\n" % (site_description,)

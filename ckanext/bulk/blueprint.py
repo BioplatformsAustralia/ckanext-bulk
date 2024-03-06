@@ -66,8 +66,11 @@ def access_required(userobj, packages):
     # We only need to check the first resource for any package
     # as our access restriction (presently) is only implemented
     # at package level
+    if userobj is None:
+        abort(404, _("Unable to check initiative access without a logged in user"))
 
     context = {"user": userobj.name}
+
 
     orgs = {}
     orgs_with_extras = []
@@ -126,10 +129,13 @@ def access_required(userobj, packages):
 
 
 def memberships(userobj):
-    context = {"user": userobj.name}
-    data_dict = {"permission": "read"}
+    if userobj is not None:
+        context = {"user": userobj.name}
+        data_dict = {"permission": "read"}
+        return get_action("organization_list_for_user")(context, data_dict)
 
-    return get_action("organization_list_for_user")(context, data_dict)
+    return None
+
 
 
 def organization_file_list(id):

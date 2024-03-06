@@ -293,7 +293,7 @@ def generate_memberships_information(
     manual_orgs = []
     output = "Membership information for %s \n" % (user_page)
 
-    if len(memberships):
+    if memberships is not None and len(memberships):
         output += "For the %s, you are a member of the \nfollowing organisations:\n" % (site_description,)
         for org in memberships:
           output += "    %s\n" % org.get("display_name",org.get("name",""))

@@ -419,8 +419,9 @@ def cart_file_list(target_user):
     packages = []
     orgs = []
     resources = []
-
-    for package_id in cart.items():
+    org_dict = {}
+    for package_id, package_details in cart.items():
+        # note the package details are sometimes missing, so we use the org from the package.
         # check if package exists and retrieve the resources
         package_q["id"] = package_id
         try:
@@ -430,8 +431,16 @@ def cart_file_list(target_user):
         package_resources = pkg_dict["resources"]
         # check if the org is already added
         pkg_org = pkg_dict["organization"]
-        if pkg_org not in orgs:
-            orgs.append(pkg_org)
+        org_id = pkg_org["id"]
+        if org_id not in org_dict:
+            org_q = {"id": org_id, "include_datasets": False}
+            try:
+                org_new = get_action("organization_show")(context, org_q)
+                org_dict[org_id] = org_new
+                orgs.append(org_new)
+            except (NotFound, NotAuthorized):
+                abort(404, _("Organization not found"))
+
         packages.append(pkg_dict)
         resources = resources + package_resources
 

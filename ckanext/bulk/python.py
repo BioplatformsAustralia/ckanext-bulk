@@ -18,7 +18,7 @@ bpa_dltool_slug = "{{ prefix }}"
 bpa_username = "{{ username }}"
 
 # Static constants
-user_agent = "data.bioplatforms.com download.py/0.6 (Contact help@bioplatforms.com)"
+user_agent = "data.bioplatforms.com download.py/0.7 (Contact help@bioplatforms.com)"
 
 # All imports should be from the base python
 import sys
@@ -287,12 +287,13 @@ def main():
     url_list = f"{script_dir}{os.path.sep}tmp{os.path.sep}{bpa_dltool_slug}_urls.txt"
     md5_file = f"{script_dir}{os.path.sep}tmp{os.path.sep}{bpa_dltool_slug}_md5sum.txt"
     query_file = f"{script_dir}{os.path.sep}QUERY.txt"
+    memberships_file = f"{script_dir}{os.path.sep}MEMBERSHIPS.txt"
 
     # Add QUERY.txt to debug output
     log_file_when_present(query_file, "QUERY.txt")
 
     # Add MEMBERSHIPS.txt to debug output
-    log_file_when_present(query_file, "MEMBERSHIPS.txt")
+    log_file_when_present(memberships_file, "MEMBERSHIPS.txt")
 
     # Check we are being run from a suitable location
 

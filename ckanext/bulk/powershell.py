@@ -83,6 +83,17 @@ function VerifyMD5([String]$filename, [String]$expected_md5)
     }
 }
 
+# Output information files
+
+function DisplayFile([String]$filename, [String]$description) {
+    '------------------------------------------------------------------------'
+    $description
+    '------------------------------------------------------------------------'
+    Get-Content $filename |ForEach-Object {"    $_"}
+}
+
+DisplayFile .\README.txt 'README.txt'
+DisplayFile .\MEMBERSHIPS.txt 'MEMBERSHIPS.txt'
 # Force downloads to location where script is
 Set-Location -Path $PSScriptRoot
 

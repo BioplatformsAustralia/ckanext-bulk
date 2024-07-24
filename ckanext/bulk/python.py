@@ -97,12 +97,16 @@ def get_remote_file_size(api, url):
     contentLength = resGet.headers.get("Content-length")
     if contentLength is None:
         u = urlparse(resGet.url)
-        if u.path == '/user/login':
-            logger.warning("Potential CKAN_API_TOKEN issue or insufficient access to requested resource")
+        if u.path == "/user/login":
+            logger.warning(
+                "Potential CKAN_API_TOKEN issue or insufficient access to requested resource"
+            )
         else:
             logger.warning("Unknown error")
             logger.warning(u.path)
-        logger.warning("Email QUERY.txt file and output to help@bioplatforms.com for support")
+        logger.warning(
+            "Email QUERY.txt file and output to help@bioplatforms.com for support"
+        )
         return None
     file_size = int(contentLength)
     return file_size
@@ -219,7 +223,7 @@ def check_for_api_key():
     set       (for a Command shell)
     """
 
-    api = ''
+    api = ""
     api_token = os.environ.get("CKAN_API_TOKEN")
 
     if not api_token:

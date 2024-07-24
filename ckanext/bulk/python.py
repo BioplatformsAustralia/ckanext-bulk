@@ -413,7 +413,7 @@ def process_downloads(api_key, url_list, md5_file, target_dir):
                     valid = check_md5sum(dl_path, md5[filename])
                     if valid:
                         counts["valid"] += 1
-                        print(filename)
+                        logger.info("%s valid" % (filename,))
                     else:
                         counts["invalid"] += 1
                     continue
@@ -430,7 +430,6 @@ def process_downloads(api_key, url_list, md5_file, target_dir):
                         valid = False
                     if valid:
                         counts["valid"] += 1
-                        print(filename)
                     else:
                         counts["invalid"] += 1
                         counts["rerun"] += 1
@@ -439,7 +438,6 @@ def process_downloads(api_key, url_list, md5_file, target_dir):
                     if valid:
                         logger.info("File already downloaded")
                         counts["valid"] += 1
-                        print(filename)
                         continue
                     else:
                         logger.info(

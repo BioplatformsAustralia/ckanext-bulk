@@ -2,6 +2,8 @@ POWERSHELL_TEMPLATE = """\
 #!/usr/bin/env pwsh
 
 {% if user_page %}
+$user_agent = "data.bioplatforms.com download.ps1/0.4 (Contact help@bioplatforms.com)"
+
 $apikey = $Env:CKAN_API_KEY
 $apitoken = $Env:CKAN_API_TOKEN
 
@@ -47,6 +49,7 @@ function DownloadURL($url)
         return
     }
     $client = new-object System.Net.WebClient
+    $client.Headers.add("user-agent", $user_agent)
     if ($apitoken) {
         $client.Headers.Add('Authorization: ' + $apitoken)
     } else {

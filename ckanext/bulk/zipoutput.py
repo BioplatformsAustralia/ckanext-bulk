@@ -372,6 +372,8 @@ def generate_bulk_zip(
                 user_page=user_page,
                 md5sum_fname=md5sum_fname,
                 urls_fname=urls_fname,
+                md5sum_optional_fname=md5sum_optional_fname,
+                urls_optional_fname=urls_optional_fname,
                 prefix=pfx,
                 username=username,
             )
@@ -423,6 +425,9 @@ def generate_bulk_zip(
 
     urls_fname = "tmp/{}_urls.txt".format(pfx)
     md5sum_fname = "tmp/{}_md5sum.txt".format(pfx)
+
+    urls_optional_fname = "tmp/{}_urls_optional.txt".format(pfx)
+    md5sum_optional_fname = "tmp/{}_md5sum_optional.txt".format(pfx)
 
     zf.writestr(ip(urls_fname), "\n".join(urls) + "\n")
     zf.writestr(ip(md5sum_fname), "\n".join("%s  %s" % t for t in md5sums) + "\n")

@@ -18,7 +18,7 @@ bpa_dltool_slug = "{{ prefix }}"
 bpa_username = "{{ username }}"
 
 # Static constants
-user_agent = "data.bioplatforms.com download.py/0.7 (Contact help@bioplatforms.com)"
+user_agent = "data.bioplatforms.com download.py/0.8 (Contact help@bioplatforms.com)"
 
 # All imports should be from the base python
 import sys
@@ -26,6 +26,7 @@ import platform
 import os
 import hashlib
 import logging
+import argparse
 from urllib.parse import urlparse
 
 if __name__ == "__main__":
@@ -269,6 +270,13 @@ Please check directory and file exists
     logger.info("%s found" % (description,))
 
 
+def check_files(*filelist):
+    for filename in filelist:
+        if not (os.path.isfile(filename) and os.access(filename, os.R_OK)):
+            return False
+    return True
+
+
 def log_file_when_present(filename,description):
     if not (os.path.isfile(filename) and os.access(filename, os.R_OK)):
        return
@@ -280,6 +288,22 @@ def log_file_when_present(filename,description):
 
 
 def main():
+    description = (
+        """
+        %s
+
+        Tool to download files from the Bioplatforms Australia Data Portal
+        """
+        % (user_agent,)
+    )
+    parser = argparse.ArgumentParser(
+        formatter_class=argparse.RawDescriptionHelpFormatter, description=description
+    )
+    parser.add_argument(
+        "-o", "--optional", action="store_true", help="Download optional files"
+    )
+    parsed = parser.parse_args()
+
     logger.info(user_agent)
     logger.info("Download Tool slug: %s" % bpa_dltool_slug)
     logger.info("BPA Portal Username: %s" % bpa_username)
@@ -290,14 +314,26 @@ def main():
     script_dir = os.path.dirname(os.path.abspath(__file__))
     url_list = f"{script_dir}{os.path.sep}tmp{os.path.sep}{bpa_dltool_slug}_urls.txt"
     md5_file = f"{script_dir}{os.path.sep}tmp{os.path.sep}{bpa_dltool_slug}_md5sum.txt"
+    url_optional_list = (
+        f"{script_dir}{os.path.sep}tmp{os.path.sep}{bpa_dltool_slug}_urls_optional.txt"
+    )
+    md5_optional_file = f"{script_dir}{os.path.sep}tmp{os.path.sep}{bpa_dltool_slug}_md5sum_optional.txt"
     query_file = f"{script_dir}{os.path.sep}QUERY.txt"
     memberships_file = f"{script_dir}{os.path.sep}MEMBERSHIPS.txt"
+    optional_file = f"{script_dir}{os.path.sep}OPTIONAL.txt"
 
     # Add QUERY.txt to debug output
     log_file_when_present(query_file, "QUERY.txt")
 
     # Add MEMBERSHIPS.txt to debug output
     log_file_when_present(memberships_file, "MEMBERSHIPS.txt")
+
+    # Add OPTIONAL.txt to debug output
+    log_file_when_present(optional_file, "OPTIONAL.txt")
+    if parsed.optional and check_files(url_optional_list, md5_optional_file):
+        logger.info("Will download OPTIONAL files")
+        logger.info("Downloading main files first ...")
+        logger.info("-----------")
 
     # Check we are being run from a suitable location
 
@@ -308,6 +344,22 @@ def main():
     # download location, debug level, API Key
 
     process_downloads(api_key, url_list, md5_file, script_dir)
+
+    if parsed.optional and check_files(url_optional_list, md5_optional_file):
+        logger.info("-----------")
+        logger.info("Processing and downloading OPTIONAL files ...")
+        logger.info("-----------")
+        # Preflight checks
+        file_present(url_optional_list, "URL optional list")
+        file_present(md5_optional_file, "MD5 optional file")
+
+        process_downloads(api_key, url_optional_list, md5_optional_file, script_dir)
+    elif not parsed.optional and check_files(url_optional_list, md5_optional_file):
+        logger.info("Skipping downloading OPTIONAL files")
+    elif parsed.optional and not check_files(url_optional_list, md5_optional_file):
+        logger.warning("OPTIONAL files not present")
+        logger.warning("There may be file problems - email help@bioplatforms.com")
+
 
 def process_downloads(api_key, url_list, md5_file, target_dir):
     # Open MD5 file and populate cache

@@ -2,6 +2,12 @@ POWERSHELL_TEMPLATE = """\
 #!/usr/bin/env pwsh
 
 {% if user_page %}
+param(
+    [Parameter(HelpMessage="Download optional files")]
+    [Alias("o")]
+    [switch]$Optional = $False
+)
+
 $user_agent = "data.bioplatforms.com download.ps1/0.4 (Contact help@bioplatforms.com)"
 
 $apikey = $Env:CKAN_API_KEY
@@ -94,25 +100,66 @@ function DisplayFile([String]$filename, [String]$description) {
 
 DisplayFile .\README.txt 'README.txt'
 DisplayFile .\MEMBERSHIPS.txt 'MEMBERSHIPS.txt'
+if([System.IO.File]::Exists('.\OPTIONAL.txt')){
+    DisplayFile .\OPTIONAL.txt 'OPTIONAL.txt'
+}
+
+
 # Force downloads to location where script is
 Set-Location -Path $PSScriptRoot
 
-'Commencing bulk download of data from CKAN:'
-''
+function DownloadData([String]$urlfile, [String]$md5file, [String]$annotation) {
+    ''
+    '------------------------------------------------------------------------'
+    'Commencing bulk download of data from CKAN (' + $annotation + ') : '
+    '------------------------------------------------------------------------'
+    ''
 
-$urls = Get-Content  ($PSScriptRoot + '/' + '{{ urls_fname }}')
-ForEach ($line in $urls) {
-    DownloadURL $line
+    $urls = Get-Content  ($PSScriptRoot + '/' + $urlfile)
+    ForEach ($line in $urls) {
+        DownloadURL $line
+    }
+
+    'File downloads complete.'
+    ''
+    'Verifying file checksums:'
+    ''
+    $md5s = Get-Content ($PSScriptRoot + '/' + $md5file)
+    ForEach ($line in $md5s) {
+        $md5, $filename = $line.Split(" ",[StringSplitOptions]'RemoveEmptyEntries')
+        VerifyMD5 $filename $md5
+    }
 }
 
-'File downloads complete.'
-''
-'Verifying file checksums:'
-''
-$md5s = Get-Content ($PSScriptRoot + '/' + '{{ md5sum_fname }}')
-ForEach ($line in $md5s) {
-    $md5, $filename = $line.Split(" ",[StringSplitOptions]'RemoveEmptyEntries')
-    VerifyMD5 $filename $md5
+function CheckFileStatus {
+    param(
+        [Parameter(
+            Mandatory=$True,
+            ValueFromRemainingArguments=$true,
+            Position = 0
+        )][string[]]
+        $fileArgs
+    )
+
+    foreach($fileArg in $fileArgs) {
+        try {
+            if(! [System.IO.File]::Exists($PSScriptRoot + '/' + $fileArg)){
+                return $False
+            }
+
+            [System.IO.File]::OpenRead($PSScriptRoot + '/' + $fileArg).Close()
+        }
+        catch {
+            return $False
+        }
+    }
+
+    return $True
 }
 
+DownloadData '{{ urls_fname }}' '{{ md5sum_fname }}' 'main'
+
+if($Optional -and (CheckFileStatus '{{ urls_optional_fname }}' '{{ md5sum_optional_fname }}')) {
+    DownloadData '{{ urls_optional_fname }}' '{{ md5sum_optional_fname }}' 'optional'
+}
 """

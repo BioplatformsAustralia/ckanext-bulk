@@ -7,6 +7,40 @@ SH_TEMPLATE = """\
 # This UNIX shell script was automatically generated.
 #
 {% if user_page %}
+
+BPA_AGENT="data.bioplatforms.com download.sh/1.2"
+
+OPTIONAL_DOWNLOAD=false
+OPTSTRING=":ho"
+
+while getopts ${OPTSTRING} opt; do
+  case ${opt} in
+    h)
+      echo "usage: download.sh [-h] [-o]"
+      echo
+      echo $BPA_AGENT
+      echo
+      echo "Tool to download files from the Bioplatforms Australia Data Portal"
+      echo
+      echo " optional arguments:"
+      echo " -h, --help      show this help message and exit"
+      echo " -o, --optional  Download optional files"
+      echo
+      exit 1
+      ;;
+    o)
+      echo "Will download optional files"
+      OPTIONAL_DOWNLOAD=true
+      ;;
+    ?)
+      echo "Invalid option: -${OPTARG}."
+      exit 1
+      ;;
+  esac
+done
+
+# Check for API tokens or keys
+
 if [ x"$CKAN_API_TOKEN" = "x" ]; then
   if [ x"$CKAN_API_KEY" = "x" ]; then
     echo "Please set the CKAN_API_TOKEN environment variable."
@@ -85,7 +119,6 @@ if ! which md5sum >/dev/null 2>&1; then
   exit 1
 fi
 
-BPA_AGENT="data.bioplatforms.com download.sh/1.1"
 
 CURL=`which curl`
 
@@ -167,10 +200,41 @@ fi
 
 output_file QUERY.txt
 output_file MEMBERSHIPS.txt
+output_file OPTIONAL.txt
+
+# Remove old MD5 log file
+if [ -f tmp/md5sum.log ]; then
+  rm tmp/md5sum.log
+fi
 
 # Undertake download
 
-echo "Downloading data"
+function file_checks()
+{
+  local F
+  for F in "$@"; do
+     if [ ! -f $F ] || [ ! -r $F ]; then
+        echo "Problem with file $F"
+        return 1
+     fi
+  done
+  return 0
+}
+
+
+function download_data()
+{
+  URLS=$1
+  MD5=$2
+  ANNOTATION=$3
+
+  echo "Checking URLs and MD5s ($ANNOTATION)"
+  if ! file_checks $URLS $MD5 ; then
+    echo "File problems - email help@bioplatforms.com"
+    exit 99
+  fi
+
+  echo "Downloading data ($ANNOTATION)"
 while read URL; do
   echo "Downloading: $URL"
   if [ x"$CKAN_API_TOKEN" != "x" ]; then
@@ -181,8 +245,15 @@ while read URL; do
   if [ $? -ne 0 ] ; then
      echo "Error downloading: $URL"
   fi
-done < {{ urls_fname }}
+  done < $URLS
 
 echo "Data download complete. Verifying checksums:"
-md5sum -c {{ md5sum_fname }} 2>&1 | tee tmp/md5sum.log
+  md5sum -c $MD5 2>&1 | tee -a tmp/md5sum.log
+}
+
+
+download_data {{ urls_fname }} {{ md5sum_fname }} main
+if [ "$OPTIONAL_DOWNLOAD" = true ] ; then
+  download_data {{ urls_optional_fname }} {{ md5sum_optional_fname }} optional
+fi
 """

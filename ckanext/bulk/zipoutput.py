@@ -28,8 +28,11 @@ Bulk download package generated: {timestamp}
 Number of Organizations        : {organization_count}
 Number of Packages             : {package_count}
 Number of Resources            : {resource_count}
-Total Space required           : {total_size}
+Total Space required           : {total_size} {includes_optional}
 Total Size (bytes)             : {total_size_bytes}
+
+This archive and associated scripts have been generated to assist
+with the downloading of files from the Bioplatforms Australia Data Portal.
 
 This archive contains the following files:
 
@@ -91,6 +94,10 @@ MEMBERSHIPS.txt:
 Text file which contains information about the organization memberships
 you hold and those required to access these datasets
 
+OPTIONAL.txt:
+(when present) Text file which contains information about the process
+to download any files considered optional.
+
 tmp folder:
 This folder contains files required by the download scripts. Its
 contents can be ignored.
@@ -101,20 +108,50 @@ enable character set detection by recent versions of Microsoft Excel.
 """
 
 QUERY_TEMPLATE = """\
-Title              : {title}
-Prefix             : {prefix}
-Timestamp          : {timestamp}
-User Page          : {user_page}
-Query              : {query}
-QueryURL           : {query_url}
-Download URL       : {download_url}
-URL Count          : {url_count}
-MD5 Sum Count      : {md5_count}
-Organization Count : {organization_count}
-Package Count      : {package_count}
-Resource Count     : {resource_count}
-Total Space        : {total_size}
-Total Bytes        : {total_size_bytes}
+Title                  : {title}
+Prefix                 : {prefix}
+Timestamp              : {timestamp}
+User Page              : {user_page}
+Query                  : {query}
+QueryURL               : {query_url}
+Download URL           : {download_url}
+URL Count              : {url_count}
+MD5 Sum Count          : {md5_count}
+URL Count Optional     : {url_optional_count}
+MD5 Sum Count Optional : {md5_optional_count}
+Organization Count     : {organization_count}
+Package Count          : {package_count}
+Resource Count         : {resource_count}
+Total Space            : {total_size}
+Total Bytes            : {total_size_bytes}
+"""
+
+OPTIONAL_NOTE = """\
+This archive contains details about optional files associated with your
+query to the Bioplatforms Australia Data Portal.
+
+These files are considered optional for typical bioinformatics use cases
+as they may be:
+
+* Raw data from the machine that generated the data provided to
+  allow future reprocessing
+* Large in size
+
+Please consult help@bioplatforms.com if you have any queries.
+
+To download these optional files, run the download script with the -o
+flag.
+
+For example:
+    download.py -o
+
+     or
+
+    download.sh -o
+
+     or
+
+    download.ps1 -o
 """
 
 amd_data_types = [
@@ -351,6 +388,7 @@ def generate_bulk_zip(
 ):
     user_page = None
     username = ""
+    includes_optional = ""
     site_url = config.get("ckan.site_url").rstrip("/")
     if user:
         user_page = "%s%s" % (
@@ -358,6 +396,13 @@ def generate_bulk_zip(
             h.url_for("user.read", id=user.name),
         )
         username = user.name
+
+    def str2bool(v):
+        if type(v)==bool:
+            return v
+        if v.lower() in ("yes", "true", "t", "y", "1"):
+            return True
+        return False
 
     def ip(s):
         return pfx + "/" + s
@@ -382,6 +427,8 @@ def generate_bulk_zip(
 
     urls = []
     md5sums = []
+    urls_optional = []
+    md5sums_optional = []
     total_size_bytes = 0
     resource_count = len(resources)
     package_count = len(packages)
@@ -389,15 +436,30 @@ def generate_bulk_zip(
 
     md5_attribute = config.get("ckanext.bulk.md5_attribute", "md5")
     for resource in sorted(resources, key=lambda r: r["url"]):
+        optional = False
+        if "optional_file" in resource:
+            if str2bool(resource["optional_file"]):
+                optional = True
+
         url = resource["url"]
-        urls.append(resource["url"])
+        if optional:
+            urls_optional.append(resource["url"])
+        else:
+            urls.append(resource["url"])
+
         if "size" in resource:
             if resource["size"]:
                 total_size_bytes = total_size_bytes + resource["size"]
 
         if md5_attribute in resource:
             filename = urlparse(url).path.split("/")[-1]
-            md5sums.append((resource[md5_attribute], filename))
+            if optional:
+                md5sums_optional.append((resource[md5_attribute], filename))
+            else:
+                md5sums.append((resource[md5_attribute], filename))
+
+    if len(urls_optional):
+        includes_optional = "(includes optional)"
 
     headers = {
         "Content-Type": "application/zip",
@@ -419,6 +481,7 @@ def generate_bulk_zip(
                 resource_count=resource_count,
                 package_count=package_count,
                 total_size_bytes=total_size_bytes,
+                includes_optional=includes_optional,
             )
         ),
     )
@@ -431,6 +494,16 @@ def generate_bulk_zip(
 
     zf.writestr(ip(urls_fname), "\n".join(urls) + "\n")
     zf.writestr(ip(md5sum_fname), "\n".join("%s  %s" % t for t in md5sums) + "\n")
+
+    if len(urls_optional):
+        zf.writestr(ip(urls_optional_fname), "\n".join(urls_optional) + "\n")
+        zf.writestr(ip(md5sum_optional_fname), "\n".join("%s  %s" % t for t in md5sums_optional) + "\n")
+        zf.writestr(
+            ip("OPTIONAL.txt"),
+            str_crlf(
+                OPTIONAL_NOTE.format()
+            ),
+        )
 
     for org in organizations:
         zf.writestr(
@@ -474,6 +547,8 @@ def generate_bulk_zip(
                 user_page=user_page,
                 url_count=len(urls),
                 md5_count=len(md5sums),
+                url_optional_count=len(urls_optional),
+                md5_optional_count=len(md5sums_optional),
                 query=query,
                 query_url=query_url,
                 download_url=download_url,

@@ -122,6 +122,7 @@ MD5 Sum Count Optional : {md5_optional_count}
 Organization Count     : {organization_count}
 Package Count          : {package_count}
 Resource Count         : {resource_count}
+Shared Files           : {shared_files_count}
 Total Space            : {total_size}
 Total Bytes            : {total_size_bytes}
 """
@@ -429,6 +430,7 @@ def generate_bulk_zip(
     md5sums = []
     urls_optional = []
     md5sums_optional = []
+    shared_files = []
     total_size_bytes = 0
     resource_count = len(resources)
     package_count = len(packages)
@@ -437,15 +439,27 @@ def generate_bulk_zip(
     md5_attribute = config.get("ckanext.bulk.md5_attribute", "md5")
     for resource in sorted(resources, key=lambda r: r["url"]):
         optional = False
+        shared = False
+
+        url = resource["url"]
+
+        if "shared_file" in resource:
+            if str2bool(resource["shared_file"]):
+                shared = True
+
+                if url in shared_files:
+                    continue
+
+                shared_files.append(url)
+
         if "optional_file" in resource:
             if str2bool(resource["optional_file"]):
                 optional = True
 
-        url = resource["url"]
         if optional:
-            urls_optional.append(resource["url"])
+            urls_optional.append(url)
         else:
-            urls.append(resource["url"])
+            urls.append(url)
 
         if "size" in resource:
             if resource["size"]:
@@ -460,6 +474,8 @@ def generate_bulk_zip(
 
     if len(urls_optional):
         includes_optional = "(includes optional)"
+
+    shared_files_count = len(shared_files)
 
     headers = {
         "Content-Type": "application/zip",
@@ -555,6 +571,7 @@ def generate_bulk_zip(
                 organization_count=organization_count,
                 package_count=package_count,
                 resource_count=resource_count,
+                shared_files_count=shared_files_count,
                 total_size=bitmath.Byte(bytes=total_size_bytes).best_prefix().format("{value:.2f} {unit}"),
                 total_size_bytes=total_size_bytes,
             )

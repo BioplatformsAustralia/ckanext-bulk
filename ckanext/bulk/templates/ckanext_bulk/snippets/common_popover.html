@@ -8,7 +8,7 @@
     {% elif calling_page == "package_list" %}
         {% set url = h.add_url_param(h.url_for('bulk.package_search_list'), new_params=request.params) %}
     {% endif %}
- 	{% if c.userobj.sysadmin or request.params.q or request.params.res_format or request.params.tags or request.params.sequence_data_type or request.params.cart %}
+ 	{% if c.userobj.sysadmin or calling_page == "package_read" or request.params.q or request.params.res_format or request.params.tags or request.params.sequence_data_type or request.params.cart %}
       {{ h.snippet('ckanext_bulk/ajax_snippets/bulk_download_popover.html', url=url) }}
     {% endif %}
 {% else %}

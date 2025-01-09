@@ -230,7 +230,8 @@ function download_data()
 
   echo "Checking URLs and MD5s ($ANNOTATION)"
   if ! file_checks $URLS $MD5 ; then
-    echo "File problems - email QUERY.txt, MEMBERSHIPS.txt files and output to help@bioplatforms.com for support"
+    echo "File problems! First try to rerun this script, and if the problem persists, consult the documentation at https://usersupport.bioplatforms.com/programmatic_access.html."
+    echo "If your issue is still unresolved, please email QUERY.txt, MEMBERSHIPS.txt files and output to help@bioplatforms.com for support"
     exit 99
   fi
 

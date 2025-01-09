@@ -106,7 +106,10 @@ def get_remote_file_size(api, url):
             logger.warning("Unknown error")
             logger.warning(u.path)
         logger.warning(
-            "Email QUERY.txt, MEMBERSHIPS.txt files and output to help@bioplatforms.com for support"
+            "First try to rerun this script, and if the problem persists, consult the documentation at https://usersupport.bioplatforms.com/programmatic_access.html."
+        )
+        logger.warning(
+            "If your issue is still unresolved, please email QUERY.txt, MEMBERSHIPS.txt files and output to help@bioplatforms.com for support"
         )
         return None
     file_size = int(contentLength)

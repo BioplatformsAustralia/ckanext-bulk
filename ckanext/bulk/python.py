@@ -18,7 +18,7 @@ bpa_dltool_slug = "{{ prefix }}"
 bpa_username = "{{ username }}"
 
 # Static constants
-user_agent = "data.bioplatforms.com download.py/0.8 (Contact help@bioplatforms.com)"
+user_agent = "data.bioplatforms.com download.py/0.9 {{ username }} (Contact help@bioplatforms.com)"
 
 # All imports should be from the base python
 import sys

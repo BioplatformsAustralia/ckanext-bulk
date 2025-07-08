@@ -8,7 +8,7 @@ param(
     [switch]$Optional = $False
 )
 
-$user_agent = "data.bioplatforms.com download.ps1/0.4 (Contact help@bioplatforms.com)"
+$user_agent = "data.bioplatforms.com download.ps1/0.5 {{ username }} (Contact help@bioplatforms.com)"
 
 $apikey = $Env:CKAN_API_KEY
 $apitoken = $Env:CKAN_API_TOKEN

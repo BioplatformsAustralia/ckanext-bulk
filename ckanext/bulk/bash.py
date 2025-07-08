@@ -8,7 +8,7 @@ SH_TEMPLATE = """\
 #
 {% if user_page %}
 
-BPA_AGENT="data.bioplatforms.com download.sh/1.2"
+BPA_AGENT="data.bioplatforms.com download.sh/1.3 {{ username }} (Contact help@bioplatforms.com)"
 
 OPTIONAL_DOWNLOAD=false
 OPTSTRING=":ho"

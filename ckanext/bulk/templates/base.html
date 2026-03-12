@@ -10,7 +10,8 @@
     {{ super() }}
     {% asset 'ckanext-bpatheme/bpatheme-js' %}
     {% asset 'ckanext-bulk/bulk_js' %}
-    <script src="https://unpkg.com/current-device/umd/current-device.min.js" defer></script>
+        <script src="https://unpkg.com/current-device"
+            type="text/javascript" defer></script>
     <script>/* Toggle between adding and removing the "responsive" class to topnav when the user clicks on the icon */
 
     function toggleMenuCollapse() {

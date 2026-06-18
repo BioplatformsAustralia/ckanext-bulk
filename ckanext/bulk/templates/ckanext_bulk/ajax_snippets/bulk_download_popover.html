@@ -10,6 +10,8 @@
               data-module-url="{{ url }}">
     <i class="fa fa-download"></i>{{ _(' Bulk download (metadata and data)') }}
       </a>
-      </div>
+      {% block bulk_download_popover_additions %}
+      {% endblock %}
+  </div>
 </div>
 
